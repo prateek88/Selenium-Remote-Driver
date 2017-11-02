@@ -15,7 +15,9 @@ extends 'Selenium::Remote::Driver';
     # These two are the same, and will only work with Firefox 48+
     my $driver = Selenium::Firefox->new;
     $driver = Selenium::Firefox->new( marionette_enabled => 1 );
-    ...;
+
+    #Do stuff...
+
     $driver->shutdown_binary;
 
     # For Firefox 47 and older, disable marionette:

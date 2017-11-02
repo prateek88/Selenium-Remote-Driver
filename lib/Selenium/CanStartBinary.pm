@@ -12,26 +12,6 @@ use Moo::Role;
 
 =for Pod::Coverage *EVERYTHING*
 
-=head1 SYNOPSIS
-
-    package My::Selenium::Chrome {
-        use Moo;
-        extends 'Selenium::Remote::Driver';
-
-        has 'binary' => ( is => 'ro', default => 'chromedriver' );
-        has 'binary_port' => ( is => 'ro', default => 9515 );
-        has '_binary_args' => ( is => 'ro', default => sub {
-            return ' --port=' . shift->port . ' --url-base=wd/hub ';
-        });
-        with 'Selenium::CanStartBinary';
-        1
-    };
-
-    my $chrome_via_binary = My::Selenium::Chrome->new;
-    my $chrome_with_path  = My::Selenium::Chrome->new(
-        binary => './chromedriver'
-    );
-
 =head1 DESCRIPTION
 
 This role takes care of the details for starting up a Webdriver

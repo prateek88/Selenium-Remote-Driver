@@ -2153,6 +2153,9 @@ sub find_element {
  Usage:
     $driver->find_elements("//input");
 
+ Warning:
+  Will die if no selector is passed, or no elements can be found with the selector provided.
+
 =cut
 
 sub find_elements {
@@ -2179,6 +2182,11 @@ sub find_elements {
         }
     }
     my $elem_obj_arr = [];
+
+    if (ref $ret_data ne 'ARRAY') {
+        croak "Malformed data returned by the selenium server.  Check that your selector is valid for your selector type.";
+    }
+
     foreach (@$ret_data) {
         push(
             @$elem_obj_arr,

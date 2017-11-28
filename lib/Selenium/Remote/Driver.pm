@@ -2947,6 +2947,28 @@ sub delete_local_storage_item {
     return $self->_execute_command($res, $params);
 }
 
+=head2 set_local_storage_item
+
+ Description:
+     Set the value of a local storage item specified by the given key.
+
+ Input: 2
+    Required
+        STRING - name of the key to be altered/created
+        STRING - value of the key
+
+ Usage:
+     $driver->set_local_storage_item('key', $some_data_structure )
+
+=cut
+
+sub set_local_storage_item {
+    my ($self, $key, $value) = @_;
+    my $res = { 'command' => 'setLocalStorageItem' };
+    my $params = { 'key' => $key, 'value' => $value };
+    return $self->_execute_command($res, $params);
+}
+
 sub _coerce_timeout_ms {
     my ($ms) = @_;
 

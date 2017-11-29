@@ -300,6 +300,9 @@ FIND: {
     my @array_elems = $driver->find_elements("//input[\@id='checky']");
     is(scalar(@array_elems),1, 'Got an array of WebElements');
     is($elems->[0]->get_value(),$array_elems[0]->get_value(), 'and the elements returned are the same');
+
+    like( exception { $driver->find_elements("//input[='zippy']") }, qr/malformed data/i, "find_elements croaks on bad selector which returns no results");
+
 }
 
 EXECUTE: {

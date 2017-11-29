@@ -378,6 +378,11 @@ has '_cmds' => (
                 'url'                => '/session/:sessionId/local_storage/key/:key',
                 'no_content_success' => 1
             },
+            'setLocalStorageItem' => {
+                'method'             => 'POST',
+                'url'                => '/session/:sessionId/local_storage/key/:key',
+                'no_content_success' => 1
+            },
             'cacheStatus' => {
                 'method'             => 'GET',
                 'url'                => 'session/:sessionId/application_cache/status',

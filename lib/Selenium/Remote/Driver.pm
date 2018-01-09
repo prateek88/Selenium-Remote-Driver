@@ -887,7 +887,7 @@ Takes BOOLEAN input.
 
 =cut
 
-sub is_webdriver_3 {
+sub set_webdriver_3 {
     my ($self,$val) = @_;
     return $self->{is_wd3} = $val;
 }

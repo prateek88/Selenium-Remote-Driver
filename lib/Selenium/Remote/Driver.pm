@@ -30,6 +30,8 @@ use File::Basename qw(basename);
 use Sub::Install ();
 use MIME::Base64 ();
 use Time::HiRes qw(usleep);
+use Clone qw{clone};
+use List::Util qw{any};
 
 use constant FINDERS => {
     class             => 'class name',
@@ -43,6 +45,8 @@ use constant FINDERS => {
     tag_name          => 'tag name',
     xpath             => 'xpath',
 };
+
+our $FORCE_WD3 = 0;
 
 =for Pod::Coverage BUILD
 
@@ -824,6 +828,23 @@ sub new_desired_session {
 sub _request_new_session {
     my ( $self, $args ) = @_;
 
+    #XXX UGLY shim for webdriver3, since nobody looks at specs when implementing stuff
+    $args->{capabilities}->{alwaysMatch} = clone($args->{desiredCapabilities});
+	my $cmap = $self->commands_v3->get_caps_map();
+	my $caps = $self->commands_v3->get_caps();
+	foreach my $cap (keys(%{$args->{capabilities}->{alwaysMatch} })) {
+		foreach my $newkey (keys(%$cmap)) {
+			if ($newkey eq $cap) {
+                last if $cmap->{$newkey} eq $cap;
+				$args->{capabilities}->{alwaysMatch}->{$cmap->{$newkey}} = $args->{capabilities}->{alwaysMatch}->{$cap};
+				delete $args->{capabilities}->{alwaysMatch}->{$cap};
+				last;
+			}
+		}
+        delete $args->{capabilities}->{alwaysMatch}->{$cap} if !any { $_ eq $cap } @$caps;
+	}
+	delete $args->{desiredCapabilities} if $FORCE_WD3;
+
     # geckodriver has not yet implemented the GET /status endpoint
     # https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver/status
     if (! $self->isa('Selenium::Firefox')) {
@@ -892,6 +913,19 @@ sub set_webdriver_3 {
     return $self->{is_wd3} = $val;
 }
 
+=head2 force_webdriver3_session
+
+Most browser drivers default to making wdv2 sessions if you pass capabilities the "old way".
+Since we're trying to "play nice" during the transition period, we are passing capabilities both ways.
+Call this before starting a new session.
+
+Takes BOOLEAN input.
+
+=cut
+
+sub force_webdriver3_session {
+	return $FORCE_WD3 = shift;
+}
 
 =head2 debug_on
 

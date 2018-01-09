@@ -111,6 +111,58 @@ has '_cmds' => (
     builder => \&get_spec,
 );
 
+=head1 Webdriver 3 capabilities
+
+WD3 giveth and taketh away some caps.  Here's all you get:
+
+	Browser name:                     "browserName"             string  Identifies the user agent.
+	Browser version:                  "browserVersion"          string  Identifies the version of the user agent.
+	Platform name:                    "platformName"            string  Identifies the operating system of the endpoint node.
+	Accept insecure TLS certificates: "acceptInsecureCerts"     boolean Indicates whether untrusted and self-signed TLS certificates are implicitly trusted on navigation for the duration of the session.
+	Proxy configuration:              "proxy"                   JSON    Defines the current session’s proxy configuration.
+
+New Stuff:
+
+	Page load strategy:               "pageLoadStrategy"        string  Defines the current session’s page load strategy.
+	Window dimensioning/positioning:  "setWindowRect"           boolean Indicates whether the remote end supports all of the commands in Resizing and Positioning Windows.
+	Session timeouts configuration:   "timeouts"                JSON    Describes the timeouts imposed on certain session operations.
+	Unhandled prompt behavior:        "unhandledPromptBehavior" string  Describes the current session’s user prompt handler.
+
+=cut
+
+has '_caps' => (
+    is     => 'lazy',
+    reader => 'get_caps',
+    builder => sub {
+        return [
+            'browserName',
+			'acceptInsecureCerts',
+            'browserVersion',
+            'platformName',
+			'proxy',
+			'pageLoadStrategy',
+			'setWindowRect',
+			'timeouts',
+			'unhandledPromptBehavior',
+        ];
+    }
+);
+
+
+has '_caps_map' => (
+    is     => 'lazy',
+    reader => 'get_caps_map',
+    builder => sub {
+        return {
+            browserName    => 'browserName',
+			acceptSslCerts => 'acceptInsecureCerts',
+            version        => 'browserVersion',
+            platform       => 'platformName',
+			proxy          => 'proxy',
+        };
+    }
+);
+
 sub get_params {
     my ( $self, $args ) = @_;
     if ( !( defined $args->{'session_id'} ) ) {

@@ -472,6 +472,10 @@ sub get_params {
     }
     my $data    = {};
     my $command = $args->{'command'};
+
+    #Allow fall-back in the event the command passed doesn't exist
+    return unless $self->get_cmds()->{$command};
+
     my $url     = $self->get_url($command);
 
     # Do the var substitutions.

@@ -724,7 +724,9 @@ sub _execute_command {
     return $self->{capabilities} if $res->{command} eq 'getCapabilities' && $self->{capabilities};
     $res->{ms} = $params->{ms} if $params->{ms};
 
-    my $resource = $self->commands->get_params($res);
+    my $resource = $self->{is_wd3} ? $self->commands_v3->get_params($res) : $self->commands->get_params($res);
+    #Fall-back to legacy if wd3 command doesn't exist
+    $resource = $self->commands->get_params($res) if !$resource && $self->{is_wd3};
 
     if ($resource) {
         $params = {} unless $params;

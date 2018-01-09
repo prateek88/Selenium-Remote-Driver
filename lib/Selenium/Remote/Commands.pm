@@ -3,11 +3,11 @@ package Selenium::Remote::Commands;
 use strict;
 use warnings;
 
-# ABSTRACT: Implement commands for Selenium::Remote::Driver
+# ABSTRACT: Implement commands for Selenium::Remote::Driver for use with webdriver 2
 
 =head1 DESCRIPTION
 
-Defines all the HTTP endpoints available to execute on a selenium server.
+Defines all the HTTP endpoints available to execute on a selenium v2 server.
 
 If you have either a customized Selenium Server, or want new features
 you should update the _cmds hash.

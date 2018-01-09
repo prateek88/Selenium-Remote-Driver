@@ -23,6 +23,7 @@ use Archive::Zip qw( :ERROR_CODES );
 use Scalar::Util;
 use Selenium::Remote::RemoteConnection;
 use Selenium::Remote::Commands;
+use Selenium::Remote::Spec;
 use Selenium::Remote::WebElement;
 use File::Spec::Functions ();
 use File::Basename qw(basename);
@@ -519,6 +520,13 @@ has 'commands' => (
     },
 );
 
+has 'commands_v3' => (
+    is      => 'lazy',
+    builder => sub {
+        return Selenium::Remote::Spec->new;
+    },
+);
+
 has 'auto_close' => (
     is      => 'rw',
     coerce  => sub { ( defined($_[0]) ? $_[0] : 1 )},
@@ -711,6 +719,11 @@ around '_execute_command' => sub {
 sub _execute_command {
     my ( $self, $res, $params ) = @_;
     $res->{'session_id'} = $self->session_id;
+
+    #webdriver 3 shims
+    return $self->{capabilities} if $res->{command} eq 'getCapabilities' && $self->{capabilities};
+    $res->{ms} = $params->{ms} if $params->{ms};
+
     my $resource = $self->commands->get_params($res);
 
     if ($resource) {
@@ -756,6 +769,12 @@ Make a new session on the server.
 Called by new(), not intended for regular use.
 
 Occaisonally handy for recovering from brower crashes.
+
+DANGER DANGER DANGER
+
+This will throw away your old session if you have not closed it!
+
+DANGER DANGER DANGER
 
 =cut
 
@@ -834,7 +853,43 @@ sub _request_new_session {
         }
         croak $error;
     }
+
+    #Webdriver 3 - best guess that this is 'whats goin on'
+    if ($resp->{capabilities}) {
+        $self->{is_wd3} = 1;
+        $self->{capabilities} = $resp->{capabilities};
+    }
+
 }
+
+=head2 is_webdriver_3
+
+Print whether the server (or browser) thinks it's implemented webdriver 3.
+If this returns true, webdriver 3 methods will be used in the case an action exists in L<Selenium::Remote::Spec> for the method you are trying to call.
+If a method you are calling has no webdriver 3 equivalent (or browser extension), the legacy commands implemented in L<Selenium::Remote::Commands> will be used.
+
+Note how I said *thinks* above.  In the case you want to force usage of legacy methods, call set_webdriver_3() to work around various browser issues.
+
+=cut
+
+sub is_webdriver_3 {
+    my $self = shift;
+    return $self->{is_wd3};
+}
+
+=head2 set_webdriver_3
+
+Force the browser to act in wd3 or legacy mode to work around browser issues.
+
+Takes BOOLEAN input.
+
+=cut
+
+sub is_webdriver_3 {
+    my ($self,$val) = @_;
+    return $self->{is_wd3} = $val;
+}
+
 
 =head2 debug_on
 

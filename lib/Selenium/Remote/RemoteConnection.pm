@@ -146,6 +146,14 @@ sub request {
     }
 
     if ((defined $params) && $params ne '') {
+
+        #WebDriver 3 shims
+        if ($resource->{payload}) {
+            foreach my $key (keys(%{$resource->{payload}})) {
+                $params->{$key} = $resource->{payload}->{$key};
+            }
+        }
+
         my $json = JSON->new;
         $json->allow_blessed;
         $content = $json->allow_nonref->utf8->encode($params);

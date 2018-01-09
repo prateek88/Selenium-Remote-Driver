@@ -27,6 +27,7 @@ extends 'Selenium::Remote::Commands';
 #Method    URI Template    no_content_success    internal_name    Command
 our $spec = qq{
 POST    session                                              0 newSession                   New Session
+POST    session                                              0 getCapabilities              Get Capabilities (v2->v3 shim)
 DELETE  session/:sessionId                                   1 quit                         Delete Session
 GET     status                                               0 status                       Status
 GET     session/:sessionId/timeouts                          0 getTimeouts                  Get Timeouts
@@ -119,9 +120,9 @@ sub get_params {
 
     #URL & data polyfills for the way selenium2 used to do things, etc
     $data->{payload} = {};
-    $data->{payload}->{pageLoad} = $args->{value} if $data->{url} =~ m/timeouts$/;
-    $data->{payload}->{script}   = $args->{value} if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
-    $data->{payload}->{implicit} = $args->{value} if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;
+    $data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/;
+    $data->{payload}->{script}   = $args->{ms} if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
+    $data->{payload}->{implicit} = $args->{ms} if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;
     #$data->{payload}->{handle}   = $args->{value} if $args->{command} eq 'switchToWindow'; #XXX probably not needed? lets hope not
     $data->{payload}->{handle}   = $args->{window_handle} if grep { $args->{command} eq $_ } qw{setWindowSize getWindowSize setWindowPosition getWindowPosition fullscreenWindow minimizeWindow maximizeWindow};
     return $data;

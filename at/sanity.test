@@ -33,10 +33,10 @@ is($driver->get_alert_text(),"BEEE DOOO","get_alert_text works (WD3)");
 is(exception { $driver->dismiss_alert() }, undef, "alert can be dismissed (WD3)");
 
 #This sucker wants "value" instead of "text" like in legacy
-like($driver->send_keys_to_prompt(),"HORGLE","send_keys_to_prompt works (WD3)");
+ok($driver->send_keys_to_prompt("HORGLE"),"send_keys_to_prompt works (WD3)");
 is(exception { $driver->accept_alert() }, undef, "alert can be accepted (WD3)");
 
-
+ok($driver->mouse_move_to_location(undef,0,0),"Can fall back to WD2 when moving mouse to location");
 
 is(exception { $driver->quit() }, undef, "Can quit (WD3)");
 

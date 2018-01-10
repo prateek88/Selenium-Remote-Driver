@@ -193,6 +193,9 @@ sub get_params {
     $data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/;
     $data->{payload}->{script}   = $args->{ms} if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
     $data->{payload}->{implicit} = $args->{ms} if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;
+	use Data::Dumper;
+	print Dumper($args);
+	$data->{payload}->{value}    = $args->{text} if $args->{text};
     #$data->{payload}->{handle}   = $args->{value} if $args->{command} eq 'switchToWindow'; #XXX probably not needed? lets hope not
     $data->{payload}->{handle}   = $args->{window_handle} if grep { $args->{command} eq $_ } qw{setWindowSize getWindowSize setWindowPosition getWindowPosition fullscreenWindow minimizeWindow maximizeWindow};
     return $data;

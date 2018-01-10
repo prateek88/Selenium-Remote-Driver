@@ -728,7 +728,8 @@ sub _execute_command {
 
     #webdriver 3 shims
     return $self->{capabilities} if $res->{command} eq 'getCapabilities' && $self->{capabilities};
-    $res->{ms} = $params->{ms} if $params->{ms};
+    $res->{ms}   = $params->{ms} if $params->{ms};
+	$res->{text} = $params->{text} if $params->{text};
 
     print "Executing $res->{command}\n" if $self->{debug};
 

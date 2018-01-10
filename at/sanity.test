@@ -73,8 +73,11 @@ $driver->go_back();
 $driver->dismiss_alert();
 $driver->dismiss_alert();
 
-#TODO execute_script testing
+#TODO execute_*_script testing
 
+ok($driver->screenshot(),"can get base64'd whole page screenshot (WD3)");
+
+#TODO add a screenshot() method to WebElement
 
 #XXX actions don't work yet
 #ok($driver->mouse_move_to_location(undef,0,0),"Can fall back to WD2 when moving mouse to location");

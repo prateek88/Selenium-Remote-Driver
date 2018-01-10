@@ -724,6 +724,8 @@ sub _execute_command {
     my ( $self, $res, $params ) = @_;
     $res->{'session_id'} = $self->session_id;
 
+    print "Executing $res->{command}\n" if $self->{debug};
+
     #webdriver 3 shims
     return $self->{capabilities} if $res->{command} eq 'getCapabilities' && $self->{capabilities};
     $res->{ms} = $params->{ms} if $params->{ms};
@@ -735,32 +737,9 @@ sub _execute_command {
     if ($resource) {
         $params = {} unless $params;
         my $resp = $self->remote_conn->request( $resource, $params);
-        if ( ref($resp) eq 'HASH' ) {
-            if ( $resp->{cmd_status} && $resp->{cmd_status} eq 'OK' ) {
-                return $resp->{cmd_return};
-            }
-            else {
-                my $msg = "Error while executing command";
-                if ( $resp->{cmd_error} ) {
-                    $msg .= ": $resp->{cmd_error}" if $resp->{cmd_error};
-                }
-                elsif ( $resp->{cmd_return} ) {
-                    if ( ref( $resp->{cmd_return} ) eq 'HASH' ) {
-                        $msg .= ": $res->{command}"
-                          if $res->{command};
-                        $msg .= ": $resp->{cmd_return}->{error}->{msg}"
-                          if $resp->{cmd_return}->{error}->{msg};
-                        $msg .= ": $resp->{cmd_return}->{message}"
-                          if $resp->{cmd_return}->{message};
-                    }
-                    else {
-                        $msg .= ": $resp->{cmd_return}";
-                    }
-                }
-                croak $msg;
-            }
-        }
-        return $resp;
+
+        return $self->commands_v3->parse_response($res,$resp) if $self->{is_wd3};
+        return $self->commands->parse_response($res,$resp);
     }
     else {
         croak "Couldn't retrieve command settings properly\n";
@@ -878,9 +857,9 @@ sub _request_new_session {
     }
 
     #Webdriver 3 - best guess that this is 'whats goin on'
-    if ($resp->{capabilities}) {
+    if ($resp->{cmd_return}->{capabilities}) {
         $self->{is_wd3} = 1;
-        $self->{capabilities} = $resp->{capabilities};
+        $self->{capabilities} = $resp->{cmd_return}->{capabilities};
     }
 
 }
@@ -941,6 +920,7 @@ sub force_webdriver3_session {
 
 sub debug_on {
     my ($self) = @_;
+    $self->{debug} = 1;
     $self->remote_conn->debug(1);
 }
 
@@ -956,6 +936,7 @@ sub debug_on {
 
 sub debug_off {
     my ($self) = @_;
+    $self->{debug} = 0;
     $self->remote_conn->debug(0);
 }
 

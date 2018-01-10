@@ -16,6 +16,7 @@ you should update the _cmds hash.
 
 =cut
 
+use Carp qw{croak};
 use List::Util qw{any};
 
 use Moo;
@@ -180,6 +181,19 @@ sub get_params {
     return $data;
 }
 
+sub parse_response {
+    my ($self,$res,$resp) = @_;
+    if ( ref($resp) eq 'HASH' ) {
+        if ( $resp->{cmd_status} && $resp->{cmd_status} eq 'OK' ) {
+            return $resp->{cmd_return};
+        }
+        my $msg = "Error while executing command";
+        $msg .= ": $resp->{cmd_return}{error}"   if $resp->{cmd_return}{error};
+        $msg .= ": $resp->{cmd_return}{message}" if $resp->{cmd_return}{message};
+        croak $msg;
+    }
+    return $resp;
+}
 
 #Utility
 

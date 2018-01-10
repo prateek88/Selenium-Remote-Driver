@@ -3,6 +3,8 @@ package Selenium::Remote::Commands;
 use strict;
 use warnings;
 
+use Carp qw{croak};
+
 # ABSTRACT: Implement commands for Selenium::Remote::Driver for use with webdriver 2
 
 =head1 DESCRIPTION
@@ -491,6 +493,33 @@ sub get_params {
     $data->{'url'}    = $url;
 
     return $data;
+}
+
+sub parse_response {
+    my ($self,$res,$resp) = @_;
+    if ( ref($resp) eq 'HASH' ) {
+        if ( $resp->{cmd_status} && $resp->{cmd_status} eq 'OK' ) {
+            return $resp->{cmd_return};
+        }
+        my $msg = "Error while executing command";
+        $msg .= ": $resp->{cmd_error}" if $resp->{cmd_error};
+        if ( $resp->{cmd_return} ) {
+            if ( ref( $resp->{cmd_return} ) eq 'HASH' ) {
+                $msg .= ": $res->{command}"
+                  if $res->{command};
+                $msg .= ": $resp->{cmd_return}->{error}->{msg}"
+                  if $resp->{cmd_return}->{error}->{msg};
+                $msg .= ": $resp->{cmd_return}->{message}"
+                  if $resp->{cmd_return}->{message};
+            }
+            else {
+                $msg .= ": $resp->{cmd_return}";
+            }
+        }
+        print "MESSAGE!!!! $msg\n";
+        croak $msg;
+    }
+    return $resp;
 }
 
 1;

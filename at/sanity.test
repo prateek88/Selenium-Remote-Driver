@@ -40,8 +40,6 @@ $timeouts = $driver->get_timeouts();
 is($timeouts->{script},20000,"WD3 shim for set_async timeouts works");
 is($timeouts->{implicit},5000,"WD3 shim for implicit timeouts works");
 
-die;
-
 my $loc = abs_path("$FindBin::Bin/test.html");
 ok($driver->get("file://$loc"),"Can load a web page (WD3)");
 
@@ -52,8 +50,38 @@ is(exception { $driver->dismiss_alert() }, undef, "alert can be dismissed (WD3)"
 ok($driver->send_keys_to_prompt("HORGLE"),"send_keys_to_prompt works (WD3)");
 is(exception { $driver->accept_alert() }, undef, "alert can be accepted (WD3)");
 
+ok($driver->get_current_window_handle(),"Got a window handle (WD3)");
+ok(scalar($driver->get_window_handles()),"Can list window handles (WD3)");
+
+diag explain $driver->get_window_size();
+diag explain $driver->get_window_position();
+
+like($driver->get_current_url(),qr/test.html$/,"get_current_url works (WD3)");
+like($driver->get_title(),qr/test/i,"get_title works (WD3)");
+
+my $otherloc = abs_path("$FindBin::Bin/other.html");
+$driver->get("file://$otherloc");
+$driver->go_back();
+$driver->dismiss_alert();
+$driver->dismiss_alert();
+like($driver->get_title(),qr/test/i,"go_back works (WD3)");
+
+$driver->go_forward();
+like($driver->get_page_source(),qr/ZIPPY/,"go_forward & get_page_source works (WD3)");
+is(exception { $driver->refresh() }, undef, "refresh works (WD3)");
+$driver->go_back();
+$driver->dismiss_alert();
+$driver->dismiss_alert();
+
+#TODO execute_script testing
+
+
 #XXX actions don't work yet
 #ok($driver->mouse_move_to_location(undef,0,0),"Can fall back to WD2 when moving mouse to location");
+#send_keys_to_active_element
+
+#XXX need a target=_blank new window to use, since it seems having no windows closes the session now
+#is(exception { $driver->close() }, undef, "Can close window (WD3)");
 
 is(exception { $driver->quit() }, undef, "Can quit (WD3)");
 

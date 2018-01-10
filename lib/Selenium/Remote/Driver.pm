@@ -727,10 +727,11 @@ sub _execute_command {
     print "Prepping $res->{command}\n" if $self->{debug};
 
     #webdriver 3 shims
-    return $self->{capabilities} if $res->{command} eq 'getCapabilities' && $self->{capabilities};
-    $res->{ms}   = $params->{ms}   if $params->{ms};
-	$res->{type} = $params->{type} if $params->{type};
-	$res->{text} = $params->{text} if $params->{text};
+    return $self->{capabilities}       if $res->{command} eq 'getCapabilities' && $self->{capabilities};
+    $res->{ms}   = $params->{ms}       if $params->{ms};
+	$res->{type} = $params->{type}     if $params->{type};
+	$res->{text} = $params->{text}     if $params->{text};
+	$res->{args}   = $params->{args}   if $params->{args};
 
     print "Executing $res->{command}\n" if $self->{debug};
 
@@ -1438,6 +1439,10 @@ sub get_window_handles {
  Description:
     Retrieve the window size
 
+ Compatibility:
+    The ability to get the size of arbitrary handles by passing input only exists in WebDriver2.
+    You will have to switch to the window first going forward.
+
  Input:
     STRING - <optional> - window handle (default is 'current' window)
 
@@ -1461,6 +1466,10 @@ sub get_window_size {
 
  Description:
     Retrieve the window position
+
+ Compatibility:
+    The ability to get the size of arbitrary handles by passing input only exists in WebDriver2.
+    You will have to switch to the window first going forward.
 
  Input:
     STRING - <optional> - window handle (default is 'current' window)
@@ -1611,10 +1620,13 @@ sub refresh {
     return $self->_execute_command($res);
 }
 
-=head2 javascript
+=head2 has_javascript
 
  Description:
     returns true if javascript is enabled in the driver.
+
+ Compatibility:
+    Can't be false on WebDriver 3.
 
  Usage:
     if ($driver->has_javascript) { ...; }

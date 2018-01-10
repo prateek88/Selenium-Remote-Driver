@@ -213,6 +213,9 @@ sub get_params {
 		$data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'script';
 		$data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'implicit';
 	}
+	#execute_*_script XXX according to spec, this is right, but most implementations still just use 'args'
+	$data->{payload}->{arguments} = $args->{args} if $args->{args};
+
     $data->{payload}->{script}   = $args->{ms} if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
     $data->{payload}->{implicit} = $args->{ms} if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;
 	$data->{payload}->{value}    = $args->{text} if $args->{text};

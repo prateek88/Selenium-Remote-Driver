@@ -728,7 +728,8 @@ sub _execute_command {
 
     #webdriver 3 shims
     return $self->{capabilities} if $res->{command} eq 'getCapabilities' && $self->{capabilities};
-    $res->{ms}   = $params->{ms} if $params->{ms};
+    $res->{ms}   = $params->{ms}   if $params->{ms};
+	$res->{type} = $params->{type} if $params->{type};
 	$res->{text} = $params->{text} if $params->{text};
 
     print "Executing $res->{command}\n" if $self->{debug};
@@ -1209,6 +1210,25 @@ sub get_capabilities {
     my $self = shift;
     my $res = { 'command' => 'getCapabilities' };
     return $self->_execute_command($res);
+}
+
+=head2 get_timeouts
+
+  Description:
+    Get the currently configured values (ms) for the page load, script and implicit timeouts.
+
+  Compatibility:
+    Only available on WebDriver3 enabled selenium servers.
+
+  Usage:
+    $driver->get_timeouts();
+
+=cut
+
+sub get_timeouts {
+	my $self = shift;
+    my $res    = { 'command' => 'getTimeouts' };
+    return $self->_execute_command( $res, {} );
 }
 
 =head2 set_timeout

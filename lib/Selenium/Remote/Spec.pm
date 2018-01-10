@@ -90,21 +90,21 @@ GET     session/:sessionId/element/:id/screenshot            0 elementScreenshot
 
 #So actions go like this
 #XXX UGH it wants aliases for the 'key' parameter, and 'value' for the unicode code points from WDKeys, what a pain
-{ actions => {
-	type => 'key|pointer|none|something_else',
-	id => "Some ID we get from listing the input sources somehow",
-	action => {
-		id => "AUTO_INCREMENT, I assume?",
-		key => "whatever key to type in IFF key type action", #XXX it actually probably wants value
-		subtype => "keyUp|KeyDown if key, pointerUp|pointerDown|pointerMove|pointerCancel if pointer, pause if any type",
-		duration => "number of ticks to pause if none/key subtype; no. ticks to take moving the pointer if a pointer event",
-		button   => "natural number corresponding to what button on the joypad err 'pointer' when doing pointerUp/Down.  How the hell do I get these numbers? unknown",
-		origin   => "Point-Of-Origin for the pointer when doing pointerMove, allowed values are 'viewpoint' and 'pointer' (relative and absolute from 0,0)",
-		x        => "x px offset from POO to move to",
-		y        => "y px offset from POO to move to",
+#{ actions => {
+#	type => 'key|pointer|none|something_else',
+#	id => "Some ID we get from listing the input sources somehow",
+#	action => {
+#		id => "AUTO_INCREMENT, I assume?",
+#		key => "whatever key to type in IFF key type action", #XXX it actually probably wants value
+#		subtype => "keyUp|KeyDown if key, pointerUp|pointerDown|pointerMove|pointerCancel if pointer, pause if any type",
+#		duration => "number of ticks to pause if none/key subtype; no. ticks to take moving the pointer if a pointer event",
+#		button   => "natural number corresponding to what button on the joypad err 'pointer' when doing pointerUp/Down.  How the hell do I get these numbers? unknown",
+#		origin   => "Point-Of-Origin for the pointer when doing pointerMove, allowed values are 'viewpoint' and 'pointer' (relative and absolute from 0,0)",
+#		x        => "x px offset from POO to move to",
+#		y        => "y px offset from POO to move to",
 		#come on guys, you really are getting lazy here, give us a Z-axis so I can like VR my dumbass web pages :p
-	}
-}};
+#	}
+#}};
 
 our $spec_parsed;
 
@@ -208,7 +208,11 @@ sub get_params {
 
     #URL & data polyfills for the way selenium2 used to do things, etc
     $data->{payload} = {};
-    $data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/;
+	if ($args->{type} ) {
+		$data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'page load';
+		$data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'script';
+		$data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'implicit';
+	}
     $data->{payload}->{script}   = $args->{ms} if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
     $data->{payload}->{implicit} = $args->{ms} if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;
 	$data->{payload}->{value}    = $args->{text} if $args->{text};

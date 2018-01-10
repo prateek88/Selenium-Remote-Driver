@@ -169,7 +169,24 @@ sub get_params {
     if ( !( defined $args->{'session_id'} ) ) {
         return;
     }
-    my $data    = $self->SUPER::get_params($args);
+
+    #Allow fall-back in the event the command passed doesn't exist
+    return unless $self->get_cmds()->{$args->{command}};
+
+    my $url     = $self->get_url($args->{command});
+
+	my $data = {};
+    # Do the var substitutions.
+    $url =~ s/:sessionId/$args->{'session_id'}/;
+    $url =~ s/:id/$args->{'id'}/;
+    $url =~ s/:name/$args->{'name'}/;
+    $url =~ s/:propertyName/$args->{'property_name'}/;
+    $url =~ s/:other/$args->{'other'}/;
+    $url =~ s/:windowHandle/$args->{'window_handle'}/;
+
+    $data->{'method'} = $self->get_method($args->{command});
+    $data->{'no_content_success'} = $self->get_no_content_success($args->{command});
+    $data->{'url'}    = $url;
 
     #URL & data polyfills for the way selenium2 used to do things, etc
     $data->{payload} = {};

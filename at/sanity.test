@@ -1,7 +1,11 @@
 use strict;
 use warnings;
 
+use Cwd qw{abs_path};
+use FindBin;
+
 use Test::More;
+use Test::Fatal;
 
 use Selenium::Remote::Driver;
 
@@ -12,13 +16,28 @@ my $driver = Selenium::Remote::Driver->new(
     browser_name => 'firefox',
     accept_ssl_certs => 1,
 );
+isa_ok($driver,'Selenium::Remote::Driver',"Can get new S::R::D with WebDriver3");
+
 $driver->debug_on();
 
-diag explain $driver->get_capabilities();
+is($driver->get_capabilities()->{browserName},'firefox',"Can get Capabilities correctly (WD3)");
+my $sessions = $driver->get_sessions();
+is(scalar(@$sessions),1,"Can fall back to selenium2 to list sessions");
 
-$driver->get('https://teodesian.net');
-sleep 30;
-$driver->quit();
+ok($driver->status()->{ready},"status reports OK (WD3)");
 
-use Data::Dumper;
-die Dumper($driver->{is_wd3},$driver->{capabilities});
+my $loc = abs_path("$FindBin::Bin/test.html");
+ok($driver->get("file://$loc"),"Can load a web page (WD3)");
+
+is($driver->get_alert_text(),"BEEE DOOO","get_alert_text works (WD3)");
+is(exception { $driver->dismiss_alert() }, undef, "alert can be dismissed (WD3)");
+
+#This sucker wants "value" instead of "text" like in legacy
+like($driver->send_keys_to_prompt(),"HORGLE","send_keys_to_prompt works (WD3)");
+is(exception { $driver->accept_alert() }, undef, "alert can be accepted (WD3)");
+
+
+
+is(exception { $driver->quit() }, undef, "Can quit (WD3)");
+
+done_testing();

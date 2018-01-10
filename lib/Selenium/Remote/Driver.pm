@@ -724,15 +724,20 @@ sub _execute_command {
     my ( $self, $res, $params ) = @_;
     $res->{'session_id'} = $self->session_id;
 
-    print "Executing $res->{command}\n" if $self->{debug};
+    print "Prepping $res->{command}\n" if $self->{debug};
 
     #webdriver 3 shims
     return $self->{capabilities} if $res->{command} eq 'getCapabilities' && $self->{capabilities};
     $res->{ms} = $params->{ms} if $params->{ms};
 
+    print "Executing $res->{command}\n" if $self->{debug};
+
     my $resource = $self->{is_wd3} ? $self->commands_v3->get_params($res) : $self->commands->get_params($res);
     #Fall-back to legacy if wd3 command doesn't exist
-    $resource = $self->commands->get_params($res) if !$resource && $self->{is_wd3};
+	if (!$resource && $self->{is_wd3}) {
+		print "Falling back to legacy selenium method for $res->{command}\n" if $self->{debug};
+        $resource = $self->commands->get_params($res);
+	}
 
     if ($resource) {
         $params = {} unless $params;

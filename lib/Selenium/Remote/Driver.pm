@@ -1688,7 +1688,11 @@ sub execute_async_script {
             if ( Scalar::Util::blessed( $args[$i] )
                  and $args[$i]->isa('Selenium::Remote::WebElement') )
             {
-                $args[$i] = { 'ELEMENT' => ( $args[$i] )->{id} };
+				if ($self->{is_wd3}) {
+                    $args[$i] = { 'element-6066-11e4-a52e-4f735466cecf' => ( $args[$i] )->{id} };
+				} else {
+					$args[$i] = { 'ELEMENT' => ( $args[$i] )->{id} };
+				}
             }
         }
 
@@ -1754,7 +1758,11 @@ sub execute_script {
             if ( Scalar::Util::blessed( $args[$i] )
                 and $args[$i]->isa('Selenium::Remote::WebElement') )
             {
-                $args[$i] = { 'ELEMENT' => ( $args[$i] )->{id} };
+				if ($self->{is_wd3}) {
+                    $args[$i] = { 'element-6066-11e4-a52e-4f735466cecf' => ( $args[$i] )->{id} };
+				} else {
+                    $args[$i] = { 'ELEMENT' => ( $args[$i] )->{id} };
+				}
             }
         }
 
@@ -1909,7 +1917,11 @@ sub switch_to_frame {
 
     my $res = { 'command' => 'switchToFrame' };
     if ( ref $id eq $self->webelement_class ) {
-        $params = { 'id' => { 'ELEMENT' => $id->{'id'} } };
+		if ($self->{is_wd3}) {
+			$params = { 'id' => { 'element-6066-11e4-a52e-4f735466cecf' => $id->{'id'} } };
+		} else {
+			$params = { 'id' => { 'ELEMENT' => $id->{'id'} } };
+		}
     }
     else {
         $params = { 'id' => $id };
@@ -2514,7 +2526,7 @@ sub _build_using {
             return $self->FINDERS->{$method};
         }
         else {
-            croak 'Bad method, expected: ' . join(', ', keys %{ $self->FINDERS });
+            croak 'Bad method, expected: ' . join(', ', keys %{ $self->FINDERS }) . ", got $method";
         }
     }
     else {

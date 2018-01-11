@@ -226,18 +226,11 @@ sub get_params {
 	#new:  "css selector", "link text", "partial link text", "tag name", "xpath"
 	#map: class, class_name, id, name, link = 'css selector'
 	if ($args->{using} && $args->{value}) {
-		$data->{payload}->{using} = 'css selector';
-		$data->{payload}->{value} = "#$args->{value}" if $args->{using} eq 'id';
-		$data->{payload}->{value} = ".$args->{value}" if grep { $args->{using} eq $_ } qw{class class_name};
-		$data->{payload}->{value} = "a[href='$args->{link}']" if $args->{using} eq 'link';
-		$data->{payload}->{value} = "[name='$args->{link}']" if $args->{using} eq 'name';
+		$data->{payload}->{using} = 'css selector' if grep {$args->{using} eq $_ } ('id', 'class name', 'name');
+		$data->{payload}->{value} = "#$args->{value}"         if $args->{using} eq 'id';
+		$data->{payload}->{value} = ".$args->{value}"         if $args->{using} eq 'class name';
+		$data->{payload}->{value} = "[name='$args->{value}']"  if $args->{using} eq 'name';
 	}
-	if ($args->{using}) {
-		$data->{payload}->{using} = 'link text'         if $args->{using} eq 'link_text';
-		$data->{payload}->{using} = 'partial link text' if $args->{using} eq 'partial_link_text';
-		$data->{payload}->{using} = 'tag name'          if $args->{using} eq 'tag_name';
-	}
-
     $data->{payload}->{script}   = $args->{ms} if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
     $data->{payload}->{implicit} = $args->{ms} if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;
 	$data->{payload}->{value}    = $args->{text} if $args->{text};
@@ -257,6 +250,7 @@ sub parse_response {
         $msg .= ": $resp->{cmd_return}{message}" if $resp->{cmd_return}{message};
         croak $msg;
     }
+
     return $resp;
 }
 

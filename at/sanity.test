@@ -57,8 +57,12 @@ my $handle = $driver->get_current_window_handle();
 ok($handle,"Got a window handle (WD3)");
 cmp_bag($driver->get_window_handles(),[$handle],"Can list window handles (WD3)");
 
-diag explain $driver->get_window_size();
-diag explain $driver->get_window_position();
+my $sz = $driver->get_window_size();
+ok(defined $sz->{height},"get_window_size works (WD3)");
+ok(defined $sz->{width},"get window size works (WD3)");
+my $pos = $driver->get_window_position();
+ok(defined $pos->{x},"get_window_size works (WD3)");
+ok(defined $pos->{y},"get window size works (WD3)");
 
 like($driver->get_current_url(),qr/test.html$/,"get_current_url works (WD3)");
 like($driver->get_title(),qr/test/i,"get_title works (WD3)");
@@ -82,7 +86,10 @@ $driver->dismiss_alert();
 ok($driver->screenshot(),"can get base64'd whole page screenshot (WD3)");
 ok($driver->find_element('body','tag_name')->screenshot(0),"can get element screenshot (WD3 ONLY) and find_element (WD3) works.");
 
-
+isa_ok($driver->find_element('red','class'),"Selenium::Remote::WebElement");
+isa_ok($driver->find_element('text','name'),"Selenium::Remote::WebElement");
+isa_ok($driver->find_element('Test Link', 'link_text'),"Selenium::Remote::WebElement");
+isa_ok($driver->find_element('Test', 'partial_link_text'),"Selenium::Remote::WebElement");
 
 diag explain$driver->switch_to_frame($driver->find_element('frame', 'id'));
 

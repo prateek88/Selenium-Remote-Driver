@@ -106,6 +106,10 @@ GET     session/:sessionId/element/:id/screenshot            0 elementScreenshot
 #	}
 #}};
 
+#orig: class, class_name, css, id, link, link_text, partial_link_text, tag_name, name, xpath
+#new:  "css selector", "link text", "partial link text", "tag name", "xpath"
+#map: class, class_name, id, name, link = 'css selector'
+
 our $spec_parsed;
 
 sub get_spec {
@@ -215,6 +219,15 @@ sub get_params {
 	}
 	#execute_*_script XXX according to spec, this is right, but most implementations still just use 'args'
 	$data->{payload}->{arguments} = $args->{args} if $args->{args};
+
+
+	#finder polyfills
+	#orig: class, class_name, css, id, link, link_text, partial_link_text, tag_name, name, xpath
+	#new:  "css selector", "link text", "partial link text", "tag name", "xpath"
+	#map: class, class_name, id, name, link = 'css selector'
+	if ($args->{using} && $args->{value}) {
+		$args->{value} = "#$args->{value}" if $args->{using} eq 'id';
+	}
 
     $data->{payload}->{script}   = $args->{ms} if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
     $data->{payload}->{implicit} = $args->{ms} if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;

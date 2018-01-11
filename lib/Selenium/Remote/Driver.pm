@@ -727,11 +727,13 @@ sub _execute_command {
     print "Prepping $res->{command}\n" if $self->{debug};
 
     #webdriver 3 shims
-    return $self->{capabilities}       if $res->{command} eq 'getCapabilities' && $self->{capabilities};
-    $res->{ms}   = $params->{ms}       if $params->{ms};
-	$res->{type} = $params->{type}     if $params->{type};
-	$res->{text} = $params->{text}     if $params->{text};
-	$res->{args}   = $params->{args}   if $params->{args};
+    return $self->{capabilities}     if $res->{command} eq 'getCapabilities' && $self->{capabilities};
+    $res->{ms}    = $params->{ms}    if $params->{ms};
+	$res->{type}  = $params->{type}  if $params->{type};
+	$res->{text}  = $params->{text}  if $params->{text};
+	$res->{args}  = $params->{args}  if $params->{args};
+	$res->{using} = $params->{using} if $params->{using};
+	$res->{value} = $params->{value} if $params->{value};
 
     print "Executing $res->{command}\n" if $self->{debug};
 
@@ -1859,6 +1861,9 @@ sub capture_screenshot {
  Description:
     List all available engines on the machine. To use an engine, it has to be present in this list.
 
+ Compatibility:
+    Does not appear to be available on Webdriver3 enabled selenium servers.
+
  Output:
     {Array.<string>} A list of available engines
 
@@ -1867,6 +1872,9 @@ sub capture_screenshot {
 
 =cut
 
+#TODO emulate behavior on wd3?
+#grep { eval { Selenium::Remote::Driver->new( browser => $_ ) } } (qw{firefox chrome opera safari htmlunit iphone phantomjs},'internet_explorer');
+#might do the trick
 sub available_engines {
     my ($self) = @_;
     my $res = { 'command' => 'availableEngines' };

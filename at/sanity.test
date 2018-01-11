@@ -26,6 +26,8 @@ is(scalar(@$sessions),1,"Can fall back to selenium2 to list sessions");
 
 ok($driver->status()->{ready},"status reports OK (WD3)");
 
+#TODO do something about available_engines
+
 $driver->set_timeout('page load',10000);
 $driver->set_timeout('script',10000);
 $driver->set_timeout('implicit',10000);
@@ -50,8 +52,9 @@ is(exception { $driver->dismiss_alert() }, undef, "alert can be dismissed (WD3)"
 ok($driver->send_keys_to_prompt("HORGLE"),"send_keys_to_prompt works (WD3)");
 is(exception { $driver->accept_alert() }, undef, "alert can be accepted (WD3)");
 
-ok($driver->get_current_window_handle(),"Got a window handle (WD3)");
-ok(scalar($driver->get_window_handles()),"Can list window handles (WD3)");
+my $handle = $driver->get_current_window_handle();
+ok($handle,"Got a window handle (WD3)");
+cmp_bag($driver->get_window_handles(),[$handle],"Can list window handles (WD3)");
 
 diag explain $driver->get_window_size();
 diag explain $driver->get_window_position();
@@ -77,6 +80,10 @@ $driver->dismiss_alert();
 
 ok($driver->screenshot(),"can get base64'd whole page screenshot (WD3)");
 ok($driver->find_element('body','tag_name')->screenshot(0),"can get element screenshot (WD3 ONLY) and find_element (WD3) works.");
+
+
+
+diag explain$driver->switch_to_frame($driver->find_element('frame', 'id'));
 
 #XXX actions don't work yet
 #ok($driver->mouse_move_to_location(undef,0,0),"Can fall back to WD2 when moving mouse to location");

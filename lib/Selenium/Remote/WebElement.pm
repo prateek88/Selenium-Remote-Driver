@@ -554,4 +554,67 @@ sub describe {
     return $self->_execute_command($res);
 }
 
+=head2 screenshot
+
+ Description:
+    Get a screenshot of the visible region that is a subset of the element's bounding box as a base64 encoded image.
+
+ Compatibility:
+    Only available on Webdriver3 enabled selenium servers.
+
+ Input (optional):
+    $scroll_into_view - BOOLEAN default true.  If false, will not scroll the element into the viewport first.
+    Failing to do so may result in an image being cropped partially or entirely.
+
+ Output:
+    STRING - base64 encoded image
+
+ Usage:
+    print $element->screenshot();
+
+To conveniently write the screenshot to a file, see L</capture_screenshot>.
+
+=cut
+
+sub screenshot {
+    my ($self, $scroll) = @_;
+    $scroll //= 1;
+    my $res = { 'command' => 'elementScreenshot', id => $self->id };
+    my $input = {scroll => int($scroll) };
+    return $self->_execute_command($res, $input);
+}
+
+=head2 capture_screenshot
+
+ Description:
+    Capture a screenshot of said element and save as a PNG to provided file name.
+
+ Compatibility:
+    Only available on Webdriver3 enabled selenium servers.
+
+ Input (optional):
+    $scroll_into_view - BOOLEAN default true.  If false, will not scroll the element into the viewport first.
+    Failing to do so may result in an image being cropped partially or entirely.
+
+ Output:
+    TRUE - (Screenshot is written to file)
+
+ Usage:
+    $element->capture_screenshot($filename);
+
+=cut
+
+sub capture_screenshot {
+    my ( $self, $filename, $scroll ) = @_;
+    croak '$filename is required' unless $filename;
+
+    open( my $fh, '>', $filename );
+    binmode $fh;
+    print $fh MIME::Base64::decode_base64( $self->screenshot($scroll) );
+    CORE::close $fh;
+    return 1;
+}
+
+
+
 1;

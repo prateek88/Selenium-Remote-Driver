@@ -76,8 +76,7 @@ $driver->dismiss_alert();
 #TODO execute_*_script testing
 
 ok($driver->screenshot(),"can get base64'd whole page screenshot (WD3)");
-
-#TODO add a screenshot() method to WebElement
+ok($driver->find_element('body','tag_name')->screenshot(0),"can get element screenshot (WD3 ONLY) and find_element (WD3) works.");
 
 #XXX actions don't work yet
 #ok($driver->mouse_move_to_location(undef,0,0),"Can fall back to WD2 when moving mouse to location");

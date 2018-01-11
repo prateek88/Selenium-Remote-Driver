@@ -1976,6 +1976,10 @@ sub switch_to_window {
  Description:
     Set the position (on screen) where you want your browser to be displayed.
 
+ Compatibility:
+    In webDriver 3 enabled selenium servers, you may only operate on the focused window.
+    As such, the window handle argument below will be ignored in this context.
+
  Input:
     INT - x co-ordinate
     INT - y co-ordinate
@@ -2005,6 +2009,10 @@ sub set_window_position {
 
  Description:
     Set the size of the browser window
+
+ Compatibility:
+    In webDriver 3 enabled selenium servers, you may only operate on the focused window.
+    As such, the window handle argument below will be ignored in this context.
 
  Input:
     INT - height of the window

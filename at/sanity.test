@@ -91,7 +91,10 @@ isa_ok($driver->find_element('text','name'),"Selenium::Remote::WebElement");
 isa_ok($driver->find_element('Test Link', 'link_text'),"Selenium::Remote::WebElement");
 isa_ok($driver->find_element('Test', 'partial_link_text'),"Selenium::Remote::WebElement");
 
-diag explain$driver->switch_to_frame($driver->find_element('frame', 'id'));
+ok($driver->switch_to_frame($driver->find_element('frame', 'id')),"can switch to frame (WD3)");
+
+ok($driver->set_window_position(1,1),"can set window position (WD3)");
+ok($driver->set_window_size(200,200),"can set window size (WD3)");
 
 #XXX actions don't work yet
 #ok($driver->mouse_move_to_location(undef,0,0),"Can fall back to WD2 when moving mouse to location");

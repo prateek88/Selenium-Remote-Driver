@@ -6,6 +6,7 @@ use FindBin;
 
 use Test::More;
 use Test::Fatal;
+use Test::Deep;
 
 use Selenium::Remote::Driver;
 

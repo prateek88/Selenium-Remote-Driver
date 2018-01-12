@@ -47,6 +47,7 @@ use constant FINDERS => {
 };
 
 our $FORCE_WD3 = 0;
+our %CURRENT_ACTION_CHAIN = ( actions => [] );
 
 =for Pod::Coverage BUILD
 
@@ -1127,7 +1128,8 @@ That said, it seems most of the data looks something like this:
 
 	$driver->general_action( actions => [{
 		type => 'pointer|key|none|somethingElseSuperSpecialDefinedByYourBrowserDriver',
-		id => 'Some unique string that you can refer to in release_general_action',
+		id => MUST be mouse|key|none|other.  And by 'other' I mean anything else.  The first 3 are 'special' in that they are used in the global actions queue.
+              If you want say, another mouse action to execute in parallel to other mouse actions (to simulate multi-touch, for example), call your action 'otherMouseAction' or something.
 		parameters => {
 			someOption => "basically these are global parameters used by all steps in the forthcoming "action chain".
 		},
@@ -1150,20 +1152,49 @@ That said, it seems most of the data looks something like this:
 
 Only available on WebDriver3 capable selenium servers.
 
+If you have called any legacy shim, such as mouse_move_to_location() previously, your actions passed will be appended to the existing actions queue.
+Called with no arguments, it simply executes the existing action queue.
+
 =cut
 
 sub general_action {
 	my ($self,%action) = @_;
+
+	_queue_action(%action);
     my $res = { 'command' => 'generalAction' };
 	use Data::Dumper;
-	print Dumper(\%action);
-    return $self->_execute_command( $res, \%action );
+	print Dumper(\%CURRENT_ACTION_CHAIN);
+    my $out = $self->_execute_command( $res, \%CURRENT_ACTION_CHAIN );
+	%CURRENT_ACTION_CHAIN = ( actions => [] );
+	return $out;
+}
+
+sub _queue_action {
+	my (%action) = @_;
+	if (ref $action{actions} eq 'ARRAY') {
+		foreach my $live_action (@{$action{actions}}) {
+			my $existing_action;
+			foreach my $global_action (@{$CURRENT_ACTION_CHAIN{actions}}) {
+				if ($global_action->{id} eq $live_action->{id}) {
+					$existing_action = $global_action;
+					last;
+				}
+			}
+			if ($existing_action) {
+				push(@{$existing_action->{actions}},@{$live_action->{actions}});
+			} else {
+				push(@{$CURRENT_ACTION_CHAIN{actions}},$live_action);
+			}
+		}
+	}
 }
 
 =head2 release_general_action
 
-Nukes *all* input device state (modifier key up/down, pointer button up/down, and other device state) from orbit.
+Nukes *all* input device state (modifier key up/down, pointer button up/down, pointer location, and other device state) from orbit.
 Call if you forget to do a *Up event in your provided action chains, or just to save time.
+
+Also clears the current actions queue.
 
 Only available on WebDriver3 capable selenium servers.
 
@@ -1172,6 +1203,7 @@ Only available on WebDriver3 capable selenium servers.
 sub release_general_action {
 	my ($self,$action) = @_;
     my $res = { 'command' => 'releaseGeneralAction' };
+	%CURRENT_ACTION_CHAIN = ( actions => [] );
     return $self->_execute_command( $res );
 }
 
@@ -1183,6 +1215,12 @@ sub release_general_action {
     cursor. If an element is provided but no offset, the mouse will be
     moved to the center of the element. If the element is not visible,
     it will be scrolled into view.
+
+ Compatibility:
+    Due to limitations in the Webdriver 3 API, mouse movements have to be executed 'lazily' e.g. only right before a click() event occurs.
+    This is because there is no longer any persistent mouse location state; mouse movements are now totally atomic.
+    This has several problematic aspects; for one, I can't think of a way to both hover an element and then do another action relying on the element staying hover()ed,
+	Aside from using javascript workarounds.
 
  Output:
     STRING -
@@ -1201,24 +1239,22 @@ sub mouse_move_to_location {
     $params{element} = $params{element}{id} if exists $params{element};
 
 	if ($self->{is_wd3}) {
-		my $action = $params{element};
-		%params = (
-			actions => [{
+		my $origin = $params{element};
+		my $move_action = {
+			type => "pointerMove",
+			duration => 0,
+			x => $params{xoffset} // 0,
+			y => $params{yoffset} // 0,
+		};
+	    $move_action->{origin} = {'element-6066-11e4-a52e-4f735466cecf' => $origin } if $origin;
+
+		_queue_action( actions => [{
 				type => "pointer",
-				id => 'mouse_move_to_location',
+				id => 'mouse',
 				"parameters" => { "pointerType" => "mouse" },
-				actions => [
-					{
-						type => "pointerMove",
-						duration => 0,
-						x => $params{xoffset} // 0,
-						y => $params{yoffset} // 0,
-					},
-				],
-			}],
-		);
-	    $params{actions}->[0]->{actions}->[0]->{origin} = {'element-6066-11e4-a52e-4f735466cecf' => $action} if $action;
-		return $self->general_action(%params);
+				actions => [$move_action],
+		}]);
+		return 1;
 	}
 
     my $res = { 'command' => 'mouseMoveToLocation' };
@@ -2944,8 +2980,8 @@ sub click {
 		$params = {
 			actions => [{
 				type => "pointer",
-				id => 'click',
-				"parameters" => { "pointerType" => "mouse" },
+				id => 'mouse',
+				parameters => { "pointerType" => "mouse" },
 				actions => [
 					{
 						type     => "pointerDown",

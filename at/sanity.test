@@ -164,11 +164,9 @@ $driver->click();
 is($input->get_attribute('value'),'defaulthowdy',"element->get_attribute() works (WD3)");
 is($driver->execute_script(qq/ return document.querySelector('input').value /),'defaulthowdy',"execute_script works, and so does send_keys_to_active_element (WD3)");
 
-#send_modifier
-#release_general_action
-#double_click
-#button_down
-#button_up
+is(exception { $driver->button_down() },undef,"Can button down (WD3)");
+is(exception { $driver->button_up() },undef,"Can button up (WD3)");
+is(exception { $driver->release_general_action() }, undef, "Can release_general_action (WD3)");
 
 die;
 

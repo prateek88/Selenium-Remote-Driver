@@ -1050,7 +1050,7 @@ sub send_keys_to_active_element {
 		my @acts = map {
 			(
 				{
-					type => 'keyPress',
+					type => 'keyDown',
 					value  => $_,
 				},
 				{
@@ -2997,6 +2997,7 @@ sub compare_elements {
  Input:
     button - any one of 'LEFT'/0 'MIDDLE'/1 'RIGHT'/2
              defaults to 'LEFT'
+	queue - (optional) queue the click, rather than executing it.  WD3 only.
 
  Usage:
     $driver->click('LEFT');
@@ -3007,17 +3008,9 @@ sub compare_elements {
 =cut
 
 sub click {
-    my ( $self, $button ) = @_;
-    my $button_enum = { LEFT => 0, MIDDLE => 1, RIGHT => 2 };
-    if ( defined $button && $button =~ /(LEFT|MIDDLE|RIGHT)/i ) {
-        $button = $button_enum->{ uc $1 };
-    }
-    elsif ( defined $button && $button =~ /(0|1|2)/ ) {
-        $button = $1;
-    }
-    else {
-        $button = 0;
-    }
+    my ( $self, $button, $append ) = @_;
+	$button = _get_button($button);
+
     my $res    = { 'command' => 'click' };
     my $params = { 'button'  => $button };
 
@@ -3041,10 +3034,26 @@ sub click {
 				],
 			}],
 		};
+		if ($append) {
+			_queue_action(%$params);
+			return 1;
+		}
 		return $self->general_action(%$params);
 	}
 
     return $self->_execute_command( $res, $params );
+}
+
+sub _get_button {
+	my $button = shift;
+    my $button_enum = { LEFT => 0, MIDDLE => 1, RIGHT => 2 };
+    if ( defined $button && $button =~ /(LEFT|MIDDLE|RIGHT)/i ) {
+        return $button_enum->{ uc $1 };
+    }
+    if ( defined $button && $button =~ /(0|1|2)/ ) {
+        return $1;
+    }
+	return 0;
 }
 
 =head2 double_click
@@ -3052,13 +3061,25 @@ sub click {
  Description:
     Double-clicks at the current mouse coordinates (set by moveto).
 
+ Compatibility:
+    On webdriver3 enabled servers, you can double click arbitrary mouse buttons.
+
  Usage:
-    $driver->double_click;
+    $driver->double_click(button);
 
 =cut
 
 sub double_click {
-    my ($self) = @_;
+    my ($self,$button) = @_;
+
+	$button = _get_button($button);
+
+	if ($self->{is_wd3}) {
+		$self->click($button,1);
+		$self->click($button,1);
+		$self->general_action();
+	}
+
     my $res = { 'command' => 'doubleClick' };
     return $self->_execute_command($res);
 }
@@ -3071,6 +3092,10 @@ sub double_click {
     should follow is buttonup . Any other mouse command (such as click
     or another call to buttondown) will yield undefined behaviour.
 
+ Compatibility:
+	On WebDriver 3 enabled servers, all this does is queue a button down action.
+    You will either have to call general_action() to perform the queue, or an action like click() which also clears the queue.
+
  Usage:
     $self->button_down;
 
@@ -3078,6 +3103,26 @@ sub double_click {
 
 sub button_down {
     my ($self) = @_;
+
+	if ($self->{is_wd3}) {
+		my $params = {
+			actions => [{
+				type => "pointer",
+				id => 'mouse',
+				parameters => { "pointerType" => "mouse" },
+				actions => [
+					{
+						type     => "pointerDown",
+						duration => 0,
+						button   => 0,
+					},
+				],
+			}],
+		};
+		_queue_action(%$params);
+		return 1;
+	}
+
     my $res = { 'command' => 'buttonDown' };
     return $self->_execute_command($res);
 }
@@ -3090,6 +3135,10 @@ sub button_down {
     issued. See the note in click and buttondown about implications of
     out-of-order commands.
 
+ Compatibility:
+	On WebDriver 3 enabled servers, all this does is queue a button down action.
+    You will either have to call general_action() to perform the queue, or an action like click() which also clears the queue.
+
  Usage:
     $self->button_up;
 
@@ -3097,6 +3146,26 @@ sub button_down {
 
 sub button_up {
     my ($self) = @_;
+
+	if ($self->{is_wd3}) {
+		my $params = {
+			actions => [{
+				type => "pointer",
+				id => 'mouse',
+				parameters => { "pointerType" => "mouse" },
+				actions => [
+					{
+						type     => "pointerDown",
+						duration => 0,
+						button   => 0,
+					},
+				],
+			}],
+		};
+		_queue_action(%$params);
+		return 1;
+	}
+
     my $res = { 'command' => 'buttonUp' };
     return $self->_execute_command($res);
 }

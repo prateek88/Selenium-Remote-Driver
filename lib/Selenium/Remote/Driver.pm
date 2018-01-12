@@ -2096,27 +2096,28 @@ sub get_all_cookies {
  Description:
     Set a cookie on the domain.
 
- Input: 5 (1 optional)
+ Input: 2 (4 optional)
     Required:
-        'name' - STRING
-        'value' - STRING
-        'path' - STRING
-        'domain' - STRING
+        'name'   - STRING
+        'value'  - STRING
+
     Optional:
-        'secure' - BOOLEAN - default is false.
+        'path'   - STRING
+        'domain' - STRING
+        'secure'   - BOOLEAN - default false.
+		'httponly' - BOOLEAN - default false.
+		'expiry'   - TIME_T  - default 20 years in the future
 
  Usage:
-    $driver->add_cookie('foo', 'bar', '/', '.google.com', 0)
+    $driver->add_cookie('foo', 'bar', '/', '.google.com', 0, 1)
 
 =cut
 
 sub add_cookie {
-    my ( $self, $name, $value, $path, $domain, $secure ) = @_;
+    my ( $self, $name, $value, $path, $domain, $secure, $httponly, $expiry ) = @_;
 
     if (   ( not defined $name )
-        || ( not defined $value )
-        || ( not defined $path )
-        || ( not defined $domain ) )
+        || ( not defined $value ))
     {
         croak "Missing parameters";
     }
@@ -2128,11 +2129,13 @@ sub add_cookie {
 
     my $params = {
         'cookie' => {
-            'name'   => $name,
-            'value'  => $value,
-            'path'   => $path,
-            'domain' => $domain,
-            'secure' => $secure,
+            'name'     => $name,
+            'value'    => $value,
+            'path'     => $path,
+            'domain'   => $domain,
+            'secure'   => $secure,
+			'httponly' => $httponly,
+			'expiry'   => $expiry,
         }
     };
 
@@ -2152,6 +2155,27 @@ sub add_cookie {
 sub delete_all_cookies {
     my ($self) = @_;
     my $res = { 'command' => 'deleteAllCookies' };
+    return $self->_execute_command($res);
+}
+
+=head2 get_cookie_named
+
+Basically get only the cookie with the provided name.
+Probably preferable to pick it out of the list unless you expect a *really* long list.
+
+ Input:
+    Cookie Name - STRING
+
+Returns cookie definition hash, much like the elements in get_all_cookies();
+
+  Compatibility:
+    Only available on webdriver3 enabled selenium servers.
+
+=cut
+
+sub get_cookie_named {
+    my ( $self, $cookie_name ) = @_;
+    my $res = { 'command' => 'getCookieNamed', 'name' => $cookie_name };
     return $self->_execute_command($res);
 }
 

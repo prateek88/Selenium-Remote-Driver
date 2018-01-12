@@ -74,7 +74,7 @@ GET     session/:sessionId/source                            0 getPageSource    
 POST    session/:sessionId/execute/sync                      0 executeScript                Execute Script
 POST    session/:sessionId/execute/async                     0 executeAsyncScript           Execute Async Script
 GET     session/:sessionId/cookie                            0 getAllCookies                Get All Cookies
-GET     session/:sessionId/cookie/:name                      0 getNamedCookie               Get Named Cookie
+GET     session/:sessionId/cookie/:name                      0 getCookieNamed               Get Named Cookie
 POST    session/:sessionId/cookie                            1 addCookie                    Add Cookie
 DELETE  session/:sessionId/cookie/:name                      1 deleteCookieNamed            Delete Cookie
 DELETE  session/:sessionId/cookie                            1 deleteAllCookies             Delete All Cookies

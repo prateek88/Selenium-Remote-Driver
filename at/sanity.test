@@ -96,12 +96,30 @@ ok($driver->switch_to_frame($driver->find_element('frame', 'id')),"can switch to
 ok($driver->set_window_position(1,1),"can set window position (WD3)");
 ok($driver->set_window_size(200,200),"can set window size (WD3)");
 
+ok($driver->maximize_window(),"can maximize window (WD3)");
+#TODO fullscreen/minimize and the other new stuff
+
+#TODO implement new getCookieNamed
+is(scalar(@{$driver->get_all_cookies()}),1,"can get cookie list (WD3)");
+$driver->delete_all_cookies();
+is(scalar(@{$driver->get_all_cookies()}),0,"can delete all cookies (WD3)");
+
 #XXX actions don't work yet
 #ok($driver->mouse_move_to_location(undef,0,0),"Can fall back to WD2 when moving mouse to location");
 #send_keys_to_active_element
 
 #XXX need a target=_blank new window to use, since it seems having no windows closes the session now
 #is(exception { $driver->close() }, undef, "Can close window (WD3)");
+
+#Pretty sure this one has enough 'inertia' to not disappear all the sudden
+$driver->get('http://w3.org/History.html');
+$driver->add_cookie('foo','bar',undef,undef,0,0,time()+5000);
+is(scalar(@{$driver->get_all_cookies()}),1,"can set cookie (WD3)");
+
+is($driver->get_cookie_named('foo')->{value},'bar',"can get cookie by name (WD3 only)");
+
+$driver->delete_cookie_named('foo');
+is(scalar(@{$driver->get_all_cookies()}),0,"can delete named cookies (WD3)");
 
 is(exception { $driver->quit() }, undef, "Can quit (WD3)");
 

@@ -91,7 +91,43 @@ isa_ok($driver->find_element('text','name'),"Selenium::Remote::WebElement");
 isa_ok($driver->find_element('Test Link', 'link_text'),"Selenium::Remote::WebElement");
 isa_ok($driver->find_element('Test', 'partial_link_text'),"Selenium::Remote::WebElement");
 
+is(scalar(@{$driver->find_elements('red','class')}),2,"can find multiple elements correctly");
+
+my $lem = $driver->find_element('body', 'tag_name');
+isa_ok($driver->find_child_element($lem, 'red','class'),"Selenium::Remote::WebElement");
+isa_ok($driver->find_child_element($lem, 'text','name'),"Selenium::Remote::WebElement");
+isa_ok($driver->find_child_element($lem, 'Test Link', 'link_text'),"Selenium::Remote::WebElement");
+isa_ok($driver->find_child_element($lem, 'Test', 'partial_link_text'),"Selenium::Remote::WebElement");
+
+$lem = $driver->find_element('form','tag_name');
+is(scalar(@{$driver->find_child_elements($lem,'./*')}),2,"can find child elements (WD3)");
+
+isa_ok($driver->get_active_element(),"Selenium::Remote::WebElement");
+
+like(exception { $driver->cache_status() },qr/unknown command/, "cache_status unimplemented in WD3");
+like(exception {
+diag explain $driver->set_geolocation(location => {
+       latitude  => 40.714353,
+       longitude => -74.005973,
+       altitude  => 0.056747
+});
+}, qr/unknown command/, "set_geolocation unimplemented in WD3");
+like(exception { $driver->get_geolocation() }, qr/unknown command/, "get_geolocation unimplemented in WD3");
+
+ok($driver->get_log('server'), "get_log fallback works");
+ok( scalar(@{$driver->get_log_types()}),"can fallback for get_log_types");
+
+like(exception { $driver->set_orientation("LANDSCAPE") }, qr/unknown command/, "set_orientation unimplemented in WD3");
+like(exception { $driver->get_orientation() }, qr/unknown command/, "get_orientation unimplemented in WD3");
+
+like($driver->upload_file($otherloc),qr/other.html$/,"upload_file fallback works");
+
+#Jinkies, this stuff is cool, it prints the selenium server help page @_@
+#diag explain $driver->get_local_storage_item('whee');
+#diag explain $driver->delete_local_storage_item('whee');
+
 ok($driver->switch_to_frame($driver->find_element('frame', 'id')),"can switch to frame (WD3)");
+ok($driver->switch_to_frame(),"can switch to parent frame (WD3 only)");
 
 ok($driver->set_window_position(1,1),"can set window position (WD3)");
 ok($driver->set_window_size(200,200),"can set window size (WD3)");
@@ -99,9 +135,7 @@ ok($driver->set_window_size(200,200),"can set window size (WD3)");
 ok($driver->maximize_window(),"can maximize window (WD3)");
 ok($driver->minimize_window(),"can minimize window (WD3 only)");
 ok($driver->fullscreen_window(),"can fullscreen window (WD3 only)");
-#TODO fullscreen/minimize and the other new stuff
 
-#TODO implement new getCookieNamed
 is(scalar(@{$driver->get_all_cookies()}),1,"can get cookie list (WD3)");
 $driver->delete_all_cookies();
 is(scalar(@{$driver->get_all_cookies()}),0,"can delete all cookies (WD3)");
@@ -109,6 +143,11 @@ is(scalar(@{$driver->get_all_cookies()}),0,"can delete all cookies (WD3)");
 #XXX actions don't work yet
 #ok($driver->mouse_move_to_location(undef,0,0),"Can fall back to WD2 when moving mouse to location");
 #send_keys_to_active_element
+#send_modifier
+#click
+#double_click
+#button_down
+#button_up
 
 #XXX need a target=_blank new window to use, since it seems having no windows closes the session now
 #is(exception { $driver->close() }, undef, "Can close window (WD3)");

@@ -1911,6 +1911,9 @@ sub available_engines {
 
 sub switch_to_frame {
     my ( $self, $id ) = @_;
+
+	return $self->switch_to_parent_frame() if ($self->{is_wd3} && !defined($id));
+
     my $json_null = JSON::null;
     my $params;
     $id = ( defined $id ) ? $id : $json_null;
@@ -1927,6 +1930,19 @@ sub switch_to_frame {
         $params = { 'id' => $id };
     }
     return $self->_execute_command( $res, $params );
+}
+
+=head2 switch_to_parent_frame
+
+Webdriver 3 equivalent of calling switch_to_frame with no arguments (e.g. NULL frame).
+This is actually called in that case, supposing you are using WD3 capable servers now.
+
+=cut
+
+sub switch_to_parent_frame {
+    my ( $self ) = @_;
+    my $res = { 'command' => 'switchToParentFrame' };
+    return $self->_execute_command( $res );
 }
 
 =head2 switch_to_window
@@ -3184,8 +3200,9 @@ __END__
 
 =head1 SEE ALSO
 
-http://code.google.com/p/selenium/
-https://code.google.com/p/selenium/wiki/JsonWireProtocol#Capabilities_JSON_Object
+https://github.com/SeleniumHQ/selenium - the main selenium RC project
+https://github.com/SeleniumHQ/selenium/wiki/JsonWireProtocol - the "legacy" webdriver specification
+https://www.w3.org/TR/webdriver/ - the WC3 WebDriver 3 specification
 https://github.com/gempesaw/Selenium-Remote-Driver/wiki
 Brownie
 Wight

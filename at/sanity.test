@@ -157,16 +157,23 @@ $driver->click();
 #TODO pretty sure this isn't working right
 $driver->send_modifier('Shift','down');
 $driver->send_keys_to_active_element('howdy',KEYS->{tab});
+$input->send_keys('eee');
 $driver->mouse_move_to_location( element => $driver->find_element('body','tag_name'));
 $driver->click();
 
 #XXX this has to be a BUG in the driver, the keys are getting thru
 is($input->get_attribute('value'),'defaulthowdy',"element->get_attribute() works (WD3)");
-is($driver->execute_script(qq/ return document.querySelector('input').value /),'defaulthowdy',"execute_script works, and so does send_keys_to_active_element (WD3)");
+is($driver->execute_script(qq/ return document.querySelector('input').value /),'defaulthowdyeee',"execute_script works, and so does send_keys_to_active_element & $element->send_keys (WD3)");
 
 is(exception { $driver->button_down() },undef,"Can button down (WD3)");
 is(exception { $driver->button_up() },undef,"Can button up (WD3)");
 is(exception { $driver->release_general_action() }, undef, "Can release_general_action (WD3)");
+
+$driver->find_element('clickme','id')->click();
+is(exception { $driver->dismiss_alert() }, undef, "Can click element (WD3)");
+
+$driver->find_element('form','tag_name')->submit();
+like($driver->get_page_source(),qr/ZIPPY/,"elem submit() works (WD3)");
 
 die;
 

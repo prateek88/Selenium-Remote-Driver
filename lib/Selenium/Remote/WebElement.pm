@@ -140,6 +140,7 @@ sub click {
 
 sub submit {
     my ($self) = @_;
+    return $self->driver->execute_script("return arguments[0].submit();", {'element-6066-11e4-a52e-4f735466cecf'=> $self->{id}} ) if $self->driver->{is_wd3};
     my $res = { 'command' => 'submitElement', 'id' => $self->id };
     return $self->_execute_command($res);
 }
@@ -203,7 +204,13 @@ sub send_keys {
 
 sub is_selected {
     my ($self) = @_;
+
     my $res = { 'command' => 'isElementSelected', 'id' => $self->id };
+    if ($self->driver->{is_wd3}) {
+        $res->{command} = 'getElementProperty';
+        $res->{name} = 'checked';
+    }
+
     return $self->_execute_command($res);
 }
 

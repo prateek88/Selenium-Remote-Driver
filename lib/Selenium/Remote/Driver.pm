@@ -2046,6 +2046,10 @@ sub set_window_size {
  Description:
     Maximizes the browser window
 
+ Compatibility:
+    In webDriver 3 enabled selenium servers, you may only operate on the focused window.
+    As such, the window handle argument below will be ignored in this context.
+
  Input:
     STRING - <optional> - window handle (default is 'current' window)
 
@@ -2061,6 +2065,48 @@ sub maximize_window {
     my ( $self, $window ) = @_;
     $window = ( defined $window ) ? $window : 'current';
     my $res = { 'command' => 'maximizeWindow', 'window_handle' => $window };
+    my $ret = $self->_execute_command( $res );
+    return $ret ? 1 : 0;
+}
+
+=head2 minimize_window
+
+ Description:
+    Minimizes the currently focused browser window (webdriver3 only)
+
+ Output:
+    BOOLEAN - Success or failure
+
+ Usage:
+    $driver->minimize_window();
+
+=cut
+
+sub minimize_window {
+    my ( $self, $window ) = @_;
+    $window = ( defined $window ) ? $window : 'current';
+    my $res = { 'command' => 'minimizeWindow', 'window_handle' => $window };
+    my $ret = $self->_execute_command( $res );
+    return $ret ? 1 : 0;
+}
+
+=head2 fullscreen_window
+
+ Description:
+    Fullscreens the currently focused browser window (webdriver3 only)
+
+ Output:
+    BOOLEAN - Success or failure
+
+ Usage:
+    $driver->fullscreen_window();
+
+=cut
+
+sub fullscreen_window {
+    my ( $self, $window ) = @_;
+    $window = ( defined $window ) ? $window : 'current';
+    my $res = { 'command' => 'fullscreenWindow', 'window_handle' => $window };
     my $ret = $self->_execute_command( $res );
     return $ret ? 1 : 0;
 }

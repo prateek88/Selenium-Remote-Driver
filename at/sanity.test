@@ -9,6 +9,7 @@ use Test::Fatal;
 use Test::Deep;
 
 use Selenium::Remote::Driver;
+use Selenium::Remote::WDKeys;
 
 Selenium::Remote::Driver::force_webdriver3_session(1);
 my $driver = Selenium::Remote::Driver->new(
@@ -142,9 +143,25 @@ is(scalar(@{$driver->get_all_cookies()}),0,"can delete all cookies (WD3)");
 
 ok($driver->mouse_move_to_location( element => $driver->find_element('a','tag_name')),"Can use new WD3 Actions API to emulate mouse_move_to_location");
 $driver->click();
-diag explain $driver->get_window_handles();
+my $handles = $driver->get_window_handles();
+is(scalar(@$handles),2,"Can move to element and then click it correctly (WD3)");
 
-#send_keys_to_active_element
+$driver->switch_to_window($handles->[1]);
+is(exception { $driver->close() }, undef, "Can close new window (WD3)");
+cmp_bag($driver->get_window_handles,[$handles->[0]],"Correct window closed (WD3)");
+$driver->switch_to_window($handles->[0]);
+
+my $input = $driver->find_element('input','tag_name');
+$driver->mouse_move_to_location( element => $input );
+$driver->click();
+$driver->send_keys_to_active_element('howdy',KEYS->{tab});
+$driver->mouse_move_to_location( element => $driver->find_element('body','tag_name'));
+$driver->click();
+
+#XXX this has to be a BUG in the driver, the keys are getting thru
+is($input->get_attribute('value'),'defaulthowdy',"element->get_attribute() works (WD3)");
+is($driver->execute_script(qq/ return document.querySelector('input').value /),'defaulthowdy',"execute_script works, and so does send_keys_to_active_element (WD3)");
+
 #send_modifier
 #release_general_action
 #double_click
@@ -152,9 +169,6 @@ diag explain $driver->get_window_handles();
 #button_up
 
 die;
-
-#XXX need a target=_blank new window to use, since it seems having no windows closes the session now
-#is(exception { $driver->close() }, undef, "Can close window (WD3)");
 
 #Pretty sure this one has enough 'inertia' to not disappear all the sudden
 $driver->get('http://w3.org/History.html');

@@ -732,7 +732,7 @@ sub _execute_command {
     $res->{ms}    = $params->{ms}    if $params->{ms};
 	$res->{type}  = $params->{type}  if $params->{type};
 	$res->{text}  = $params->{text}  if $params->{text};
-	$res->{args}  = $params->{args}  if $params->{args};
+
 	$res->{using} = $params->{using} if $params->{using};
 	$res->{value} = $params->{value} if $params->{value};
 
@@ -1021,6 +1021,9 @@ sub get_alert_text {
     Rather, the state of the modifier keys is kept between calls, so mouse
     interactions can be performed while modifier keys are depressed.
 
+ Compatibility:
+    On webdriver 3 servers, don't use this to send modifier keys; use send_modifier instead.
+
  Input: 1
     Required:
         {ARRAY | STRING} - Array of strings or a string.
@@ -1041,6 +1044,30 @@ sub get_alert_text {
 
 sub send_keys_to_active_element {
     my ( $self, @strings ) = @_;
+
+	if ($self->{is_wd3}) {
+		@strings = map { split('',$_) } @strings;
+		my @acts = map {
+			(
+				{
+					type => 'keyDown',
+					value  => $_,
+				},
+				{
+					type => 'keyUp',
+					value  => $_,
+				}
+			)
+		} @strings;
+
+		my $action = { actions => [{
+			id      => 'key',
+			type    => 'key',
+			actions => \@acts,
+		}]};
+		return $self->general_action(%$action);
+	}
+
     my $res = { 'command' => 'sendKeysToActiveElement' };
     my $params = {
         'value' => \@strings,

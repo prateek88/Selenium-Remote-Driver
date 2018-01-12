@@ -195,9 +195,6 @@ sub get_params {
 		$data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'script';
 		$data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'implicit';
 	}
-	#execute_*_script XXX according to spec, this is right, but most implementations still just use 'args'
-	$data->{payload}->{arguments} = $args->{args} if $args->{args};
-
 
 	#finder polyfills
 	#orig: class, class_name, css, id, link, link_text, partial_link_text, tag_name, name, xpath

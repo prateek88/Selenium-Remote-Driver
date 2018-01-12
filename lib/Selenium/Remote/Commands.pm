@@ -360,11 +360,6 @@ has '_cmds' => (
                 'url'                => 'session/:sessionId/buttonup',
                 'no_content_success' => 1
             },
-            'generalAction' => {
-                'method'             => 'POST',
-                'url'                => 'session/:sessionId/actions',
-                'no_content_success' => 1
-            },
             'uploadFile' => {
                 'method'             => 'POST',
                 'url'                => 'session/:sessionId/file',

@@ -2939,6 +2939,30 @@ sub click {
     }
     my $res    = { 'command' => 'click' };
     my $params = { 'button'  => $button };
+
+	if ($self->{is_wd3}) {
+		$params = {
+			actions => [{
+				type => "pointer",
+				id => 'click',
+				"parameters" => { "pointerType" => "mouse" },
+				actions => [
+					{
+						type     => "pointerDown",
+						duration => 0,
+						button   => $button,
+					},
+					{
+						type     => "pointerUp",
+						duration => 0,
+						button   => $button,
+					},
+				],
+			}],
+		};
+		return $self->general_action(%$params);
+	}
+
     return $self->_execute_command( $res, $params );
 }
 

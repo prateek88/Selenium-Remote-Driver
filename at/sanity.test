@@ -154,6 +154,8 @@ $driver->switch_to_window($handles->[0]);
 my $input = $driver->find_element('input','tag_name');
 $driver->mouse_move_to_location( element => $input );
 $driver->click();
+#TODO pretty sure this isn't working right
+$driver->send_modifier('Shift','down');
 $driver->send_keys_to_active_element('howdy',KEYS->{tab});
 $driver->mouse_move_to_location( element => $driver->find_element('body','tag_name'));
 $driver->click();

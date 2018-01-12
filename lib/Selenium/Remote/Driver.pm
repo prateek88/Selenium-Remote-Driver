@@ -25,6 +25,7 @@ use Selenium::Remote::RemoteConnection;
 use Selenium::Remote::Commands;
 use Selenium::Remote::Spec;
 use Selenium::Remote::WebElement;
+use Selenium::Remote::WDKeys;
 use File::Spec::Functions ();
 use File::Basename qw(basename);
 use Sub::Install ();
@@ -732,7 +733,6 @@ sub _execute_command {
     $res->{ms}    = $params->{ms}    if $params->{ms};
 	$res->{type}  = $params->{type}  if $params->{type};
 	$res->{text}  = $params->{text}  if $params->{text};
-
 	$res->{using} = $params->{using} if $params->{using};
 	$res->{value} = $params->{value} if $params->{value};
 
@@ -1050,7 +1050,7 @@ sub send_keys_to_active_element {
 		my @acts = map {
 			(
 				{
-					type => 'keyDown',
+					type => 'keyPress',
 					value  => $_,
 				},
 				{
@@ -2935,6 +2935,24 @@ sub send_modifier {
     if ( $isdown =~ /(down|up)/ ) {
         $isdown = $isdown =~ /down/ ? 1 : 0;
     }
+
+	if ($self->{is_wd3}) {
+		my $acts = [
+			{
+				type => $isdown ? 'keyDown' : 'keyUp',
+				value  => KEYS->{lc($modifier)},
+			},
+		];
+
+		my $action = { actions => [{
+			id      => 'key',
+			type    => 'key',
+			actions => $acts,
+		}]};
+		_queue_action(%$action);
+		return 1;
+	}
+
     my $res = { 'command' => 'sendModifier' };
     my $params = {
         value  => $modifier,

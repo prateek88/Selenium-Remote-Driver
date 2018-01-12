@@ -141,13 +141,15 @@ $driver->delete_all_cookies();
 is(scalar(@{$driver->get_all_cookies()}),0,"can delete all cookies (WD3)");
 
 #XXX actions don't work yet
-#ok($driver->mouse_move_to_location(undef,0,0),"Can fall back to WD2 when moving mouse to location");
+ok($driver->mouse_move_to_location( element => $driver->find_element('a','tag_name')),"Can fall back to WD2 when moving mouse to location");
 #send_keys_to_active_element
 #send_modifier
 #click
 #double_click
 #button_down
 #button_up
+
+die;
 
 #XXX need a target=_blank new window to use, since it seems having no windows closes the session now
 #is(exception { $driver->close() }, undef, "Can close window (WD3)");

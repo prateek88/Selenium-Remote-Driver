@@ -1117,6 +1117,64 @@ sub dismiss_alert {
     return $self->_execute_command($res);
 }
 
+=head2 general_action
+
+Provide an 'actions definition' hash to make webdriver use input devices.
+Given the spec for the structure of this data is 'non normative',
+it is left as an exercise to the reader what that means as to how to use this function.
+
+That said, it seems most of the data looks something like this:
+
+	$driver->general_action( actions => [{
+		type => 'pointer|key|none|somethingElseSuperSpecialDefinedByYourBrowserDriver',
+		id => 'Some unique string that you can refer to in release_general_action',
+		parameters => {
+			someOption => "basically these are global parameters used by all steps in the forthcoming "action chain".
+		},
+		actions => [
+			{
+				type => "keyUp|KeyDown if key, pointerUp|pointerDown|pointerMove|pointerCancel if pointer, pause if any type",
+				key => A raw keycode or character from the keyboard if this is a key event,
+				duration => how many 'ticks' this action should take, you probably want this to be 0 all of the time unless you are evading Software debounce.
+				button => what number button if you are using a pointer (this sounds terribly like it might be re-purposed to be a joypad in the future sometime)
+				origin => Point of Origin if moving a pointer around
+				x => unit vector to travel along x-axis if pointerMove event
+				y => unit vector to travel along y-axis if pointerMove event
+			},
+			...
+		]
+		},
+		...
+		]
+	)
+
+Only available on WebDriver3 capable selenium servers.
+
+=cut
+
+sub general_action {
+	my ($self,%action) = @_;
+    my $res = { 'command' => 'generalAction' };
+	use Data::Dumper;
+	print Dumper(\%action);
+    return $self->_execute_command( $res, \%action );
+}
+
+=head2 release_general_action
+
+Nukes *all* input device state (modifier key up/down, pointer button up/down, and other device state) from orbit.
+Call if you forget to do a *Up event in your provided action chains, or just to save time.
+
+Only available on WebDriver3 capable selenium servers.
+
+=cut
+
+sub release_general_action {
+	my ($self,$action) = @_;
+    my $res = { 'command' => 'releaseGeneralAction' };
+    return $self->_execute_command( $res );
+}
+
 =head2 mouse_move_to_location
 
  Description:
@@ -1141,6 +1199,28 @@ sub dismiss_alert {
 sub mouse_move_to_location {
     my ( $self, %params ) = @_;
     $params{element} = $params{element}{id} if exists $params{element};
+
+	if ($self->{is_wd3}) {
+		my $action = $params{element};
+		%params = (
+			actions => [{
+				type => "pointer",
+				id => 'mouse_move_to_location',
+				"parameters" => { "pointerType" => "mouse" },
+				actions => [
+					{
+						type => "pointerMove",
+						duration => 0,
+						x => $params{xoffset} // 0,
+						y => $params{yoffset} // 0,
+					},
+				],
+			}],
+		);
+	    $params{actions}->[0]->{actions}->[0]->{origin} = {'element-6066-11e4-a52e-4f735466cecf' => $action} if $action;
+		return $self->general_action(%params);
+	}
+
     my $res = { 'command' => 'mouseMoveToLocation' };
     return $self->_execute_command( $res, \%params );
 }
@@ -1153,46 +1233,6 @@ Synonymous with mouse_move_to_location
 
 sub move_to {
     return shift->mouse_move_to_location(@_);
-}
-
-=head2 move_action
-
- Description:
-    Move the mouse similarly to the mouse_move_to_location. But uses the
-    new webdriver actions API which is supported by geckodriver.
-
- Output:
-    STRING -
-
- Usage:
-    # element - the element to move to. Must be specified.
-    # xoffset - X offset to move to, relative to the center of the element. If not specified, the mouse will move to the middle of the element.
-    # yoffset - Y offset to move to, relative to the center of the element. If not specified, the mouse will move to the middle of the element.
-
-    print $driver->move_action(element => e, xoffset => x, yoffset => y);
-
-=cut
-
-sub move_action {
-    my ( $self, %args ) = @_;
-    my $params = {
-        actions => [{
-            type => "pointer",
-            id => 'my pointer move',
-            "parameters" => { "pointerType" => "mouse" },
-            actions => [
-                {
-                    type => "pointerMove",
-                    duration => 0,
-                    x => $args{xoffset} // 0,
-                    y => $args{yoffset} // 0,
-                    origin => {'element-6066-11e4-a52e-4f735466cecf' => $args{element}{id}},
-                },
-            ],
-        }],
-    };
-    my $res = { 'command' => 'generalAction' };
-    return $self->_execute_command( $res, $params );
 }
 
 =head2 get_capabilities

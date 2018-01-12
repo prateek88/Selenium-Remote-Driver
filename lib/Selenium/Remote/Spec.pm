@@ -88,28 +88,6 @@ GET     session/:sessionId/screenshot                        0 screenshot       
 GET     session/:sessionId/element/:id/screenshot            0 elementScreenshot            Take Element Screenshot
 };
 
-#So actions go like this
-#XXX UGH it wants aliases for the 'key' parameter, and 'value' for the unicode code points from WDKeys, what a pain
-#{ actions => {
-#	type => 'key|pointer|none|something_else',
-#	id => "Some ID we get from listing the input sources somehow",
-#	action => {
-#		id => "AUTO_INCREMENT, I assume?",
-#		key => "whatever key to type in IFF key type action", #XXX it actually probably wants value
-#		subtype => "keyUp|KeyDown if key, pointerUp|pointerDown|pointerMove|pointerCancel if pointer, pause if any type",
-#		duration => "number of ticks to pause if none/key subtype; no. ticks to take moving the pointer if a pointer event",
-#		button   => "natural number corresponding to what button on the joypad err 'pointer' when doing pointerUp/Down.  How the hell do I get these numbers? unknown",
-#		origin   => "Point-Of-Origin for the pointer when doing pointerMove, allowed values are 'viewpoint' and 'pointer' (relative and absolute from 0,0)",
-#		x        => "x px offset from POO to move to",
-#		y        => "y px offset from POO to move to",
-		#come on guys, you really are getting lazy here, give us a Z-axis so I can like VR my dumbass web pages :p
-#	}
-#}};
-
-#orig: class, class_name, css, id, link, link_text, partial_link_text, tag_name, name, xpath
-#new:  "css selector", "link text", "partial link text", "tag name", "xpath"
-#map: class, class_name, id, name, link = 'css selector'
-
 our $spec_parsed;
 
 sub get_spec {

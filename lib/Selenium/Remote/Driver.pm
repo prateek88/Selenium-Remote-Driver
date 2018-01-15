@@ -1189,8 +1189,6 @@ sub general_action {
 
 	_queue_action(%action);
     my $res = { 'command' => 'generalAction' };
-	use Data::Dumper;
-	print Dumper(\%CURRENT_ACTION_CHAIN);
     my $out = $self->_execute_command( $res, \%CURRENT_ACTION_CHAIN );
 	%CURRENT_ACTION_CHAIN = ( actions => [] );
 	return $out;

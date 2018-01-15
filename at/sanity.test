@@ -101,7 +101,7 @@ isa_ok($driver->find_child_element($lem, 'Test Link', 'link_text'),"Selenium::Re
 isa_ok($driver->find_child_element($lem, 'Test', 'partial_link_text'),"Selenium::Remote::WebElement");
 
 $lem = $driver->find_element('form','tag_name');
-is(scalar(@{$driver->find_child_elements($lem,'./*')}),2,"can find child elements (WD3)");
+is(scalar(@{$driver->find_child_elements($lem,'./*')}),6,"can find child elements (WD3)");
 
 isa_ok($driver->get_active_element(),"Selenium::Remote::WebElement");
 
@@ -162,20 +162,42 @@ $driver->mouse_move_to_location( element => $driver->find_element('body','tag_na
 $driver->click();
 
 #XXX this has to be a BUG in the driver, the keys are getting thru
-is($input->get_attribute('value'),'defaulthowdy',"element->get_attribute() works (WD3)");
-is($driver->execute_script(qq/ return document.querySelector('input').value /),'defaulthowdyeee',"execute_script works, and so does send_keys_to_active_element & $element->send_keys (WD3)");
+is($input->get_attribute('value'),'defaulthowdyeee',"element->get_attribute() emulates old behavior thru get_property (WD3)");
+is($input->get_attribute('value',1),'default',"element->get_attribute() can do it's actual job (WD3)");
+is($driver->execute_script(qq/ return document.querySelector('input').value /),'defaulthowdyeee',"execute_script works, and so does send_keys_to_active_element & element->send_keys (WD3)");
+$input->clear();
+is($input->get_property('value'),'',"clear() works (WD3)");
 
 is(exception { $driver->button_down() },undef,"Can button down (WD3)");
 is(exception { $driver->button_up() },undef,"Can button up (WD3)");
 is(exception { $driver->release_general_action() }, undef, "Can release_general_action (WD3)");
+
+ok($driver->find_element('radio2','id')->is_selected(),"WD3 is_selected() works");
+my $l1 = $driver->find_element('radio1','id');
+$l1->set_selected();
+$l1->set_selected();
+ok($l1->is_selected(),"WD3 set_selected works");
+$l1->toggle();
+ok(!$l1->is_selected(),"WD3 toggle works: off");
+$l1->toggle();
+ok($l1->is_selected(),"WD3 toggle works: on");
+
+my $l2 = $driver->find_element('hammertime','id');
+is( $l2->is_enabled(),undef,"is_enabled works (WD3)");
+ok( $l2->get_element_location()->{x},"Can get element rect (WD3)");
+ok( $l2->get_size()->{'height'}, "Size shim on rect works (WD3)");
+is( $l2->get_tag_name(),'input',"get_tag_name works (WD3)");
+isnt( exception { $l2->get_element_location_in_view() }, undef, "get_element_location_in_view not available in WD3");
+
+is($driver->find_element('hidon','id')->is_displayed(),'',"is_displayed returns false for type=hidden elements");
+is($driver->find_element('no-see-em','id')->is_displayed(),'',"is_displayed returns false for display=none");
+is($driver->find_element('h1','tag_name')->get_text(),'Howdy Howdy Howdy', "get_text works (WD3)");
 
 $driver->find_element('clickme','id')->click();
 is(exception { $driver->dismiss_alert() }, undef, "Can click element (WD3)");
 
 $driver->find_element('form','tag_name')->submit();
 like($driver->get_page_source(),qr/ZIPPY/,"elem submit() works (WD3)");
-
-die;
 
 #Pretty sure this one has enough 'inertia' to not disappear all the sudden
 $driver->get('http://w3.org/History.html');

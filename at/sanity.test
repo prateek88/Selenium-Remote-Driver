@@ -11,7 +11,6 @@ use Test::Deep;
 use Selenium::Remote::Driver;
 use Selenium::Remote::WDKeys;
 
-Selenium::Remote::Driver::force_webdriver3_session(1);
 my $driver = Selenium::Remote::Driver->new(
     remote_server_addr => 'localhost',
     port => 4444,

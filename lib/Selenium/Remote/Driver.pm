@@ -47,7 +47,7 @@ use constant FINDERS => {
     xpath             => 'xpath',
 };
 
-our $FORCE_WD3 = 0;
+our $FORCE_WD2 = 0;
 our %CURRENT_ACTION_CHAIN = ( actions => [] );
 
 =for Pod::Coverage BUILD
@@ -731,19 +731,19 @@ sub _execute_command {
     #webdriver 3 shims
     return $self->{capabilities}     if $res->{command} eq 'getCapabilities' && $self->{capabilities};
     $res->{ms}    = $params->{ms}    if $params->{ms};
-	$res->{type}  = $params->{type}  if $params->{type};
-	$res->{text}  = $params->{text}  if $params->{text};
-	$res->{using} = $params->{using} if $params->{using};
-	$res->{value} = $params->{value} if $params->{value};
+    $res->{type}  = $params->{type}  if $params->{type};
+    $res->{text}  = $params->{text}  if $params->{text};
+    $res->{using} = $params->{using} if $params->{using};
+    $res->{value} = $params->{value} if $params->{value};
 
     print "Executing $res->{command}\n" if $self->{debug};
 
     my $resource = $self->{is_wd3} ? $self->commands_v3->get_params($res) : $self->commands->get_params($res);
     #Fall-back to legacy if wd3 command doesn't exist
-	if (!$resource && $self->{is_wd3}) {
-		print "Falling back to legacy selenium method for $res->{command}\n" if $self->{debug};
+    if (!$resource && $self->{is_wd3}) {
+        print "Falling back to legacy selenium method for $res->{command}\n" if $self->{debug};
         $resource = $self->commands->get_params($res);
-	}
+    }
 
     if ($resource) {
         $params = {} unless $params;
@@ -820,20 +820,20 @@ sub _request_new_session {
 
     #XXX UGLY shim for webdriver3, since nobody looks at specs when implementing stuff
     $args->{capabilities}->{alwaysMatch} = clone($args->{desiredCapabilities});
-	my $cmap = $self->commands_v3->get_caps_map();
-	my $caps = $self->commands_v3->get_caps();
-	foreach my $cap (keys(%{$args->{capabilities}->{alwaysMatch} })) {
-		foreach my $newkey (keys(%$cmap)) {
-			if ($newkey eq $cap) {
+    my $cmap = $self->commands_v3->get_caps_map();
+    my $caps = $self->commands_v3->get_caps();
+    foreach my $cap (keys(%{$args->{capabilities}->{alwaysMatch} })) {
+        foreach my $newkey (keys(%$cmap)) {
+            if ($newkey eq $cap) {
                 last if $cmap->{$newkey} eq $cap;
-				$args->{capabilities}->{alwaysMatch}->{$cmap->{$newkey}} = $args->{capabilities}->{alwaysMatch}->{$cap};
-				delete $args->{capabilities}->{alwaysMatch}->{$cap};
-				last;
-			}
-		}
+                $args->{capabilities}->{alwaysMatch}->{$cmap->{$newkey}} = $args->{capabilities}->{alwaysMatch}->{$cap};
+                delete $args->{capabilities}->{alwaysMatch}->{$cap};
+                last;
+            }
+        }
         delete $args->{capabilities}->{alwaysMatch}->{$cap} if !any { $_ eq $cap } @$caps;
-	}
-	delete $args->{desiredCapabilities} if $FORCE_WD3;
+    }
+    delete $args->{capabilities} if $FORCE_WD2; #XXX 'secret' feature to help the legacy unit tests to work
 
     # geckodriver has not yet implemented the GET /status endpoint
     # https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver/status
@@ -868,7 +868,7 @@ sub _request_new_session {
     }
 
     #Webdriver 3 - best guess that this is 'whats goin on'
-    if ($resp->{cmd_return}->{capabilities}) {
+    if ( ref $resp->{cmd_return} eq 'HASH' && $resp->{cmd_return}->{capabilities}) {
         $self->{is_wd3} = 1;
         $self->{capabilities} = $resp->{cmd_return}->{capabilities};
     }
@@ -888,33 +888,6 @@ Note how I said *thinks* above.  In the case you want to force usage of legacy m
 sub is_webdriver_3 {
     my $self = shift;
     return $self->{is_wd3};
-}
-
-=head2 set_webdriver_3
-
-Force the browser to act in wd3 or legacy mode to work around browser issues.
-
-Takes BOOLEAN input.
-
-=cut
-
-sub set_webdriver_3 {
-    my ($self,$val) = @_;
-    return $self->{is_wd3} = $val;
-}
-
-=head2 force_webdriver3_session
-
-Most browser drivers default to making wdv2 sessions if you pass capabilities the "old way".
-Since we're trying to "play nice" during the transition period, we are passing capabilities both ways.
-Call this before starting a new session.
-
-Takes BOOLEAN input.
-
-=cut
-
-sub force_webdriver3_session {
-	return $FORCE_WD3 = shift;
 }
 
 =head2 debug_on
@@ -1045,28 +1018,28 @@ sub get_alert_text {
 sub send_keys_to_active_element {
     my ( $self, @strings ) = @_;
 
-	if ($self->{is_wd3}) {
-		@strings = map { split('',$_) } @strings;
-		my @acts = map {
-			(
-				{
-					type => 'keyDown',
-					value  => $_,
-				},
-				{
-					type => 'keyUp',
-					value  => $_,
-				}
-			)
-		} @strings;
+    if ($self->{is_wd3}) {
+        @strings = map { split('',$_) } @strings;
+        my @acts = map {
+            (
+                {
+                    type => 'keyDown',
+                    value  => $_,
+                },
+                {
+                    type => 'keyUp',
+                    value  => $_,
+                }
+            )
+        } @strings;
 
-		my $action = { actions => [{
-			id      => 'key',
-			type    => 'key',
-			actions => \@acts,
-		}]};
-		return $self->general_action(%$action);
-	}
+        my $action = { actions => [{
+            id      => 'key',
+            type    => 'key',
+            actions => \@acts,
+        }]};
+        return $self->general_action(%$action);
+    }
 
     my $res = { 'command' => 'sendKeysToActiveElement' };
     my $params = {
@@ -1153,29 +1126,29 @@ it is left as an exercise to the reader what that means as to how to use this fu
 
 That said, it seems most of the data looks something like this:
 
-	$driver->general_action( actions => [{
-		type => 'pointer|key|none|somethingElseSuperSpecialDefinedByYourBrowserDriver',
-		id => MUST be mouse|key|none|other.  And by 'other' I mean anything else.  The first 3 are 'special' in that they are used in the global actions queue.
+    $driver->general_action( actions => [{
+        type => 'pointer|key|none|somethingElseSuperSpecialDefinedByYourBrowserDriver',
+        id => MUST be mouse|key|none|other.  And by 'other' I mean anything else.  The first 3 are 'special' in that they are used in the global actions queue.
               If you want say, another mouse action to execute in parallel to other mouse actions (to simulate multi-touch, for example), call your action 'otherMouseAction' or something.
-		parameters => {
-			someOption => "basically these are global parameters used by all steps in the forthcoming "action chain".
-		},
-		actions => [
-			{
-				type => "keyUp|KeyDown if key, pointerUp|pointerDown|pointerMove|pointerCancel if pointer, pause if any type",
-				key => A raw keycode or character from the keyboard if this is a key event,
-				duration => how many 'ticks' this action should take, you probably want this to be 0 all of the time unless you are evading Software debounce.
-				button => what number button if you are using a pointer (this sounds terribly like it might be re-purposed to be a joypad in the future sometime)
-				origin => Point of Origin if moving a pointer around
-				x => unit vector to travel along x-axis if pointerMove event
-				y => unit vector to travel along y-axis if pointerMove event
-			},
-			...
-		]
-		},
-		...
-		]
-	)
+        parameters => {
+            someOption => "basically these are global parameters used by all steps in the forthcoming "action chain".
+        },
+        actions => [
+            {
+                type => "keyUp|KeyDown if key, pointerUp|pointerDown|pointerMove|pointerCancel if pointer, pause if any type",
+                key => A raw keycode or character from the keyboard if this is a key event,
+                duration => how many 'ticks' this action should take, you probably want this to be 0 all of the time unless you are evading Software debounce.
+                button => what number button if you are using a pointer (this sounds terribly like it might be re-purposed to be a joypad in the future sometime)
+                origin => Point of Origin if moving a pointer around
+                x => unit vector to travel along x-axis if pointerMove event
+                y => unit vector to travel along y-axis if pointerMove event
+            },
+            ...
+        ]
+        },
+        ...
+        ]
+    )
 
 Only available on WebDriver3 capable selenium servers.
 
@@ -1185,33 +1158,33 @@ Called with no arguments, it simply executes the existing action queue.
 =cut
 
 sub general_action {
-	my ($self,%action) = @_;
+    my ($self,%action) = @_;
 
-	_queue_action(%action);
+    _queue_action(%action);
     my $res = { 'command' => 'generalAction' };
     my $out = $self->_execute_command( $res, \%CURRENT_ACTION_CHAIN );
-	%CURRENT_ACTION_CHAIN = ( actions => [] );
-	return $out;
+    %CURRENT_ACTION_CHAIN = ( actions => [] );
+    return $out;
 }
 
 sub _queue_action {
-	my (%action) = @_;
-	if (ref $action{actions} eq 'ARRAY') {
-		foreach my $live_action (@{$action{actions}}) {
-			my $existing_action;
-			foreach my $global_action (@{$CURRENT_ACTION_CHAIN{actions}}) {
-				if ($global_action->{id} eq $live_action->{id}) {
-					$existing_action = $global_action;
-					last;
-				}
-			}
-			if ($existing_action) {
-				push(@{$existing_action->{actions}},@{$live_action->{actions}});
-			} else {
-				push(@{$CURRENT_ACTION_CHAIN{actions}},$live_action);
-			}
-		}
-	}
+    my (%action) = @_;
+    if (ref $action{actions} eq 'ARRAY') {
+        foreach my $live_action (@{$action{actions}}) {
+            my $existing_action;
+            foreach my $global_action (@{$CURRENT_ACTION_CHAIN{actions}}) {
+                if ($global_action->{id} eq $live_action->{id}) {
+                    $existing_action = $global_action;
+                    last;
+                }
+            }
+            if ($existing_action) {
+                push(@{$existing_action->{actions}},@{$live_action->{actions}});
+            } else {
+                push(@{$CURRENT_ACTION_CHAIN{actions}},$live_action);
+            }
+        }
+    }
 }
 
 =head2 release_general_action
@@ -1226,9 +1199,9 @@ Only available on WebDriver3 capable selenium servers.
 =cut
 
 sub release_general_action {
-	my ($self,$action) = @_;
+    my ($self) = @_;
     my $res = { 'command' => 'releaseGeneralAction' };
-	%CURRENT_ACTION_CHAIN = ( actions => [] );
+    %CURRENT_ACTION_CHAIN = ( actions => [] );
     return $self->_execute_command( $res );
 }
 
@@ -1245,7 +1218,7 @@ sub release_general_action {
     Due to limitations in the Webdriver 3 API, mouse movements have to be executed 'lazily' e.g. only right before a click() event occurs.
     This is because there is no longer any persistent mouse location state; mouse movements are now totally atomic.
     This has several problematic aspects; for one, I can't think of a way to both hover an element and then do another action relying on the element staying hover()ed,
-	Aside from using javascript workarounds.
+    Aside from using javascript workarounds.
 
  Output:
     STRING -
@@ -1263,24 +1236,24 @@ sub mouse_move_to_location {
     my ( $self, %params ) = @_;
     $params{element} = $params{element}{id} if exists $params{element};
 
-	if ($self->{is_wd3}) {
-		my $origin = $params{element};
-		my $move_action = {
-			type => "pointerMove",
-			duration => 0,
-			x => $params{xoffset} // 0,
-			y => $params{yoffset} // 0,
-		};
-	    $move_action->{origin} = {'element-6066-11e4-a52e-4f735466cecf' => $origin } if $origin;
+    if ($self->{is_wd3}) {
+        my $origin = $params{element};
+        my $move_action = {
+            type => "pointerMove",
+            duration => 0,
+            x => $params{xoffset} // 0,
+            y => $params{yoffset} // 0,
+        };
+        $move_action->{origin} = {'element-6066-11e4-a52e-4f735466cecf' => $origin } if $origin;
 
-		_queue_action( actions => [{
-				type => "pointer",
-				id => 'mouse',
-				"parameters" => { "pointerType" => "mouse" },
-				actions => [$move_action],
-		}]);
-		return 1;
-	}
+        _queue_action( actions => [{
+                type => "pointer",
+                id => 'mouse',
+                "parameters" => { "pointerType" => "mouse" },
+                actions => [$move_action],
+        }]);
+        return 1;
+    }
 
     my $res = { 'command' => 'mouseMoveToLocation' };
     return $self->_execute_command( $res, \%params );
@@ -1330,7 +1303,7 @@ sub get_capabilities {
 =cut
 
 sub get_timeouts {
-	my $self = shift;
+    my $self = shift;
     my $res    = { 'command' => 'getTimeouts' };
     return $self->_execute_command( $res, {} );
 }
@@ -1789,11 +1762,11 @@ sub execute_async_script {
             if ( Scalar::Util::blessed( $args[$i] )
                  and $args[$i]->isa('Selenium::Remote::WebElement') )
             {
-				if ($self->{is_wd3}) {
+                if ($self->{is_wd3}) {
                     $args[$i] = { 'element-6066-11e4-a52e-4f735466cecf' => ( $args[$i] )->{id} };
-				} else {
-					$args[$i] = { 'ELEMENT' => ( $args[$i] )->{id} };
-				}
+                } else {
+                    $args[$i] = { 'ELEMENT' => ( $args[$i] )->{id} };
+                }
             }
         }
 
@@ -1859,11 +1832,11 @@ sub execute_script {
             if ( Scalar::Util::blessed( $args[$i] )
                 and $args[$i]->isa('Selenium::Remote::WebElement') )
             {
-				if ($self->{is_wd3}) {
+                if ($self->{is_wd3}) {
                     $args[$i] = { 'element-6066-11e4-a52e-4f735466cecf' => ( $args[$i] )->{id} };
-				} else {
+                } else {
                     $args[$i] = { 'ELEMENT' => ( $args[$i] )->{id} };
-				}
+                }
             }
         }
 
@@ -2013,7 +1986,7 @@ sub available_engines {
 sub switch_to_frame {
     my ( $self, $id ) = @_;
 
-	return $self->switch_to_parent_frame() if ($self->{is_wd3} && !defined($id));
+    return $self->switch_to_parent_frame() if ($self->{is_wd3} && !defined($id));
 
     my $json_null = JSON::null;
     my $params;
@@ -2021,11 +1994,11 @@ sub switch_to_frame {
 
     my $res = { 'command' => 'switchToFrame' };
     if ( ref $id eq $self->webelement_class ) {
-		if ($self->{is_wd3}) {
-			$params = { 'id' => { 'element-6066-11e4-a52e-4f735466cecf' => $id->{'id'} } };
-		} else {
-			$params = { 'id' => { 'ELEMENT' => $id->{'id'} } };
-		}
+        if ($self->{is_wd3}) {
+            $params = { 'id' => { 'element-6066-11e4-a52e-4f735466cecf' => $id->{'id'} } };
+        } else {
+            $params = { 'id' => { 'ELEMENT' => $id->{'id'} } };
+        }
     }
     else {
         $params = { 'id' => $id };
@@ -2268,8 +2241,8 @@ sub get_all_cookies {
         'path'   - STRING
         'domain' - STRING
         'secure'   - BOOLEAN - default false.
-		'httponly' - BOOLEAN - default false.
-		'expiry'   - TIME_T  - default 20 years in the future
+        'httponly' - BOOLEAN - default false.
+        'expiry'   - TIME_T  - default 20 years in the future
 
  Usage:
     $driver->add_cookie('foo', 'bar', '/', '.google.com', 0, 1)
@@ -2297,10 +2270,10 @@ sub add_cookie {
             'path'     => $path,
             'domain'   => $domain,
             'secure'   => $secure,
-			'httponly' => $httponly,
-			'expiry'   => $expiry,
         }
     };
+    $params->{cookie}->{'httponly'} = $httponly if $httponly;
+    $params->{cookie}->{'expiry'}   = $expiry   if $expiry;
 
     return $self->_execute_command( $res, $params );
 }
@@ -2934,22 +2907,22 @@ sub send_modifier {
         $isdown = $isdown =~ /down/ ? 1 : 0;
     }
 
-	if ($self->{is_wd3}) {
-		my $acts = [
-			{
-				type => $isdown ? 'keyDown' : 'keyUp',
-				value  => KEYS->{lc($modifier)},
-			},
-		];
+    if ($self->{is_wd3}) {
+        my $acts = [
+            {
+                type => $isdown ? 'keyDown' : 'keyUp',
+                value  => KEYS->{lc($modifier)},
+            },
+        ];
 
-		my $action = { actions => [{
-			id      => 'key',
-			type    => 'key',
-			actions => $acts,
-		}]};
-		_queue_action(%$action);
-		return 1;
-	}
+        my $action = { actions => [{
+            id      => 'key',
+            type    => 'key',
+            actions => $acts,
+        }]};
+        _queue_action(%$action);
+        return 1;
+    }
 
     my $res = { 'command' => 'sendModifier' };
     my $params = {
@@ -2995,7 +2968,7 @@ sub compare_elements {
  Input:
     button - any one of 'LEFT'/0 'MIDDLE'/1 'RIGHT'/2
              defaults to 'LEFT'
-	queue - (optional) queue the click, rather than executing it.  WD3 only.
+    queue - (optional) queue the click, rather than executing it.  WD3 only.
 
  Usage:
     $driver->click('LEFT');
@@ -3007,43 +2980,43 @@ sub compare_elements {
 
 sub click {
     my ( $self, $button, $append ) = @_;
-	$button = _get_button($button);
+    $button = _get_button($button);
 
     my $res    = { 'command' => 'click' };
     my $params = { 'button'  => $button };
 
-	if ($self->{is_wd3}) {
-		$params = {
-			actions => [{
-				type => "pointer",
-				id => 'mouse',
-				parameters => { "pointerType" => "mouse" },
-				actions => [
-					{
-						type     => "pointerDown",
-						duration => 0,
-						button   => $button,
-					},
-					{
-						type     => "pointerUp",
-						duration => 0,
-						button   => $button,
-					},
-				],
-			}],
-		};
-		if ($append) {
-			_queue_action(%$params);
-			return 1;
-		}
-		return $self->general_action(%$params);
-	}
+    if ($self->{is_wd3}) {
+        $params = {
+            actions => [{
+                type => "pointer",
+                id => 'mouse',
+                parameters => { "pointerType" => "mouse" },
+                actions => [
+                    {
+                        type     => "pointerDown",
+                        duration => 0,
+                        button   => $button,
+                    },
+                    {
+                        type     => "pointerUp",
+                        duration => 0,
+                        button   => $button,
+                    },
+                ],
+            }],
+        };
+        if ($append) {
+            _queue_action(%$params);
+            return 1;
+        }
+        return $self->general_action(%$params);
+    }
 
     return $self->_execute_command( $res, $params );
 }
 
 sub _get_button {
-	my $button = shift;
+    my $button = shift;
     my $button_enum = { LEFT => 0, MIDDLE => 1, RIGHT => 2 };
     if ( defined $button && $button =~ /(LEFT|MIDDLE|RIGHT)/i ) {
         return $button_enum->{ uc $1 };
@@ -3051,7 +3024,7 @@ sub _get_button {
     if ( defined $button && $button =~ /(0|1|2)/ ) {
         return $1;
     }
-	return 0;
+    return 0;
 }
 
 =head2 double_click
@@ -3070,13 +3043,13 @@ sub _get_button {
 sub double_click {
     my ($self,$button) = @_;
 
-	$button = _get_button($button);
+    $button = _get_button($button);
 
-	if ($self->{is_wd3}) {
-		$self->click($button,1);
-		$self->click($button,1);
-		$self->general_action();
-	}
+    if ($self->{is_wd3}) {
+        $self->click($button,1);
+        $self->click($button,1);
+        $self->general_action();
+    }
 
     my $res = { 'command' => 'doubleClick' };
     return $self->_execute_command($res);
@@ -3091,7 +3064,7 @@ sub double_click {
     or another call to buttondown) will yield undefined behaviour.
 
  Compatibility:
-	On WebDriver 3 enabled servers, all this does is queue a button down action.
+    On WebDriver 3 enabled servers, all this does is queue a button down action.
     You will either have to call general_action() to perform the queue, or an action like click() which also clears the queue.
 
  Usage:
@@ -3102,24 +3075,24 @@ sub double_click {
 sub button_down {
     my ($self) = @_;
 
-	if ($self->{is_wd3}) {
-		my $params = {
-			actions => [{
-				type => "pointer",
-				id => 'mouse',
-				parameters => { "pointerType" => "mouse" },
-				actions => [
-					{
-						type     => "pointerDown",
-						duration => 0,
-						button   => 0,
-					},
-				],
-			}],
-		};
-		_queue_action(%$params);
-		return 1;
-	}
+    if ($self->{is_wd3}) {
+        my $params = {
+            actions => [{
+                type => "pointer",
+                id => 'mouse',
+                parameters => { "pointerType" => "mouse" },
+                actions => [
+                    {
+                        type     => "pointerDown",
+                        duration => 0,
+                        button   => 0,
+                    },
+                ],
+            }],
+        };
+        _queue_action(%$params);
+        return 1;
+    }
 
     my $res = { 'command' => 'buttonDown' };
     return $self->_execute_command($res);
@@ -3134,7 +3107,7 @@ sub button_down {
     out-of-order commands.
 
  Compatibility:
-	On WebDriver 3 enabled servers, all this does is queue a button down action.
+    On WebDriver 3 enabled servers, all this does is queue a button down action.
     You will either have to call general_action() to perform the queue, or an action like click() which also clears the queue.
 
  Usage:
@@ -3145,24 +3118,24 @@ sub button_down {
 sub button_up {
     my ($self) = @_;
 
-	if ($self->{is_wd3}) {
-		my $params = {
-			actions => [{
-				type => "pointer",
-				id => 'mouse',
-				parameters => { "pointerType" => "mouse" },
-				actions => [
-					{
-						type     => "pointerDown",
-						duration => 0,
-						button   => 0,
-					},
-				],
-			}],
-		};
-		_queue_action(%$params);
-		return 1;
-	}
+    if ($self->{is_wd3}) {
+        my $params = {
+            actions => [{
+                type => "pointer",
+                id => 'mouse',
+                parameters => { "pointerType" => "mouse" },
+                actions => [
+                    {
+                        type     => "pointerDown",
+                        duration => 0,
+                        button   => 0,
+                    },
+                ],
+            }],
+        };
+        _queue_action(%$params);
+        return 1;
+    }
 
     my $res = { 'command' => 'buttonUp' };
     return $self->_execute_command($res);
@@ -3412,10 +3385,10 @@ __END__
 
 =head1 SEE ALSO
 
-https://github.com/SeleniumHQ/selenium - the main selenium RC project
-https://github.com/SeleniumHQ/selenium/wiki/JsonWireProtocol - the "legacy" webdriver specification
-https://www.w3.org/TR/webdriver/ - the WC3 WebDriver 3 specification
-https://github.com/gempesaw/Selenium-Remote-Driver/wiki
+L<https://github.com/SeleniumHQ/selenium> - the main selenium RC project
+L<https://github.com/SeleniumHQ/selenium/wiki/JsonWireProtocol> - the "legacy" webdriver specification
+L<https://www.w3.org/TR/webdriver/> - the WC3 WebDriver 3 specification
+L<https://github.com/gempesaw/Selenium-Remote-Driver/wiki>
 Brownie
 Wight
 

@@ -116,18 +116,18 @@ has '_cmds' => (
 
 WD3 giveth and taketh away some caps.  Here's all you get:
 
-	Browser name:                     "browserName"             string  Identifies the user agent.
-	Browser version:                  "browserVersion"          string  Identifies the version of the user agent.
-	Platform name:                    "platformName"            string  Identifies the operating system of the endpoint node.
-	Accept insecure TLS certificates: "acceptInsecureCerts"     boolean Indicates whether untrusted and self-signed TLS certificates are implicitly trusted on navigation for the duration of the session.
-	Proxy configuration:              "proxy"                   JSON    Defines the current session’s proxy configuration.
+    Browser name:                     "browserName"             string  Identifies the user agent.
+    Browser version:                  "browserVersion"          string  Identifies the version of the user agent.
+    Platform name:                    "platformName"            string  Identifies the operating system of the endpoint node.
+    Accept insecure TLS certificates: "acceptInsecureCerts"     boolean Indicates whether untrusted and self-signed TLS certificates are implicitly trusted on navigation for the duration of the session.
+    Proxy configuration:              "proxy"                   JSON    Defines the current session’s proxy configuration.
 
 New Stuff:
 
-	Page load strategy:               "pageLoadStrategy"        string  Defines the current session’s page load strategy.
-	Window dimensioning/positioning:  "setWindowRect"           boolean Indicates whether the remote end supports all of the commands in Resizing and Positioning Windows.
-	Session timeouts configuration:   "timeouts"                JSON    Describes the timeouts imposed on certain session operations.
-	Unhandled prompt behavior:        "unhandledPromptBehavior" string  Describes the current session’s user prompt handler.
+    Page load strategy:               "pageLoadStrategy"        string  Defines the current session’s page load strategy.
+    Window dimensioning/positioning:  "setWindowRect"           boolean Indicates whether the remote end supports all of the commands in Resizing and Positioning Windows.
+    Session timeouts configuration:   "timeouts"                JSON    Describes the timeouts imposed on certain session operations.
+    Unhandled prompt behavior:        "unhandledPromptBehavior" string  Describes the current session’s user prompt handler.
 
 =cut
 
@@ -137,14 +137,14 @@ has '_caps' => (
     builder => sub {
         return [
             'browserName',
-			'acceptInsecureCerts',
+            'acceptInsecureCerts',
             'browserVersion',
             'platformName',
-			'proxy',
-			'pageLoadStrategy',
-			'setWindowRect',
-			'timeouts',
-			'unhandledPromptBehavior',
+            'proxy',
+            'pageLoadStrategy',
+            'setWindowRect',
+            'timeouts',
+            'unhandledPromptBehavior',
         ];
     }
 );
@@ -156,10 +156,10 @@ has '_caps_map' => (
     builder => sub {
         return {
             browserName    => 'browserName',
-			acceptSslCerts => 'acceptInsecureCerts',
+            acceptSslCerts => 'acceptInsecureCerts',
             version        => 'browserVersion',
             platform       => 'platformName',
-			proxy          => 'proxy',
+            proxy          => 'proxy',
         };
     }
 );
@@ -175,7 +175,7 @@ sub get_params {
 
     my $url     = $self->get_url($args->{command});
 
-	my $data = {};
+    my $data = {};
     # Do the var substitutions.
     $url =~ s/:sessionId/$args->{'session_id'}/;
     $url =~ s/:id/$args->{'id'}/;
@@ -190,31 +190,31 @@ sub get_params {
 
     #URL & data polyfills for the way selenium2 used to do things, etc
     $data->{payload} = {};
-	if ($args->{type} ) {
-		$data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'page load';
-		$data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'script';
-		$data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'implicit';
-	}
+    if ($args->{type} ) {
+        $data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'page load';
+        $data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'script';
+        $data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'implicit';
+    }
 
-	#finder polyfills
-	#orig: class, class_name, css, id, link, link_text, partial_link_text, tag_name, name, xpath
-	#new:  "css selector", "link text", "partial link text", "tag name", "xpath"
-	#map: class, class_name, id, name, link = 'css selector'
-	if ($args->{using} && $args->{value}) {
-		$data->{payload}->{using} = 'css selector' if grep {$args->{using} eq $_ } ('id', 'class name', 'name');
-		$data->{payload}->{value} = "#$args->{value}"         if $args->{using} eq 'id';
-		$data->{payload}->{value} = ".$args->{value}"         if $args->{using} eq 'class name';
-		$data->{payload}->{value} = "[name='$args->{value}']"  if $args->{using} eq 'name';
-	}
+    #finder polyfills
+    #orig: class, class_name, css, id, link, link_text, partial_link_text, tag_name, name, xpath
+    #new:  "css selector", "link text", "partial link text", "tag name", "xpath"
+    #map: class, class_name, id, name, link = 'css selector'
+    if ($args->{using} && $args->{value}) {
+        $data->{payload}->{using} = 'css selector' if grep {$args->{using} eq $_ } ('id', 'class name', 'name');
+        $data->{payload}->{value} = "#$args->{value}"         if $args->{using} eq 'id';
+        $data->{payload}->{value} = ".$args->{value}"         if $args->{using} eq 'class name';
+        $data->{payload}->{value} = "[name='$args->{value}']"  if $args->{using} eq 'name';
+    }
     $data->{payload}->{script}   = $args->{ms} if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
     $data->{payload}->{implicit} = $args->{ms} if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;
-	$data->{payload}->{value}    = $args->{text} if $args->{text};
+    $data->{payload}->{value}    = $args->{text} if $args->{text};
     $data->{payload}->{handle}   = $args->{window_handle} if grep { $args->{command} eq $_ } qw{setWindowSize getWindowSize setWindowPosition getWindowPosition fullscreenWindow minimizeWindow maximizeWindow};
     return $data;
 }
 
 sub parse_response {
-    my ($self,$res,$resp) = @_;
+    my ($self,undef,$resp) = @_;
     if ( ref($resp) eq 'HASH' ) {
         if ( $resp->{cmd_status} && $resp->{cmd_status} eq 'OK' ) {
             return $resp->{cmd_return};

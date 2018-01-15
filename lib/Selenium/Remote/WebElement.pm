@@ -270,7 +270,7 @@ sub toggle {
 
 sub is_enabled {
     my ($self) = @_;
-    return $self->get_property('enabled') if $self->driver->{is_wd3};
+    return $self->get_property('enabled') ? 1 : 0 if $self->driver->{is_wd3};
     my $res = { 'command' => 'isElementEnabled', 'id' => $self->id };
     return $self->_execute_command($res);
 }
@@ -509,8 +509,8 @@ sub get_value {
 sub is_displayed {
     my ($self) = @_;
     if ($self->driver->{is_wd3}) {
-        return '' if $self->get_tag_name() eq 'input' && $self->get_property('type') eq 'hidden'; #hidden type inputs
-        return $self->get_css_attribute('display') ne 'none';
+        return 0 if $self->get_tag_name() eq 'input' && $self->get_property('type') eq 'hidden'; #hidden type inputs
+        return int($self->get_css_attribute('display') ne 'none');
     }
     my $res = { 'command' => 'isElementDisplayed', 'id' => $self->id };
     return $self->_execute_command($res);

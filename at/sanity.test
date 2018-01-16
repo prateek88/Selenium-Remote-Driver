@@ -11,6 +11,9 @@ use Test::Deep;
 use Selenium::Remote::Driver;
 use Selenium::Remote::WDKeys;
 
+#TODO: cover new_from_caps
+#TODO: Selenium::Firefox::Profile usage
+
 my $driver = Selenium::Remote::Driver->new(
     remote_server_addr => 'localhost',
     port => 4444,

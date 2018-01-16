@@ -91,18 +91,19 @@ server - that is, you would not need the JRE or the JDK to run your
 Selenium tests. See L<Selenium::Chrome>, L<Selenium::PhantomJS>, and
 L<Selenium::Firefox> for details. If you'd like additional browsers
 besides these, give us a holler over in
-L<Github|https://github.com/gempesaw/Selenium-Remote-Driver/issues>.
+L<Github|https://github.com/teodesian/Selenium-Remote-Driver/issues>.
 
 =head2 Remote Driver Response
 
 Selenium::Remote::Driver uses the
 L<JsonWireProtocol|http://code.google.com/p/selenium/wiki/JsonWireProtocol>
+And the
+L<WC3 WebDriver Protocol|https://www.w3.org/TR/webdriver/>
 to communicate with the Selenium Server. If an error occurs while
 executing the command then the server sends back an HTTP error code
-with a JSON encoded reponse that indicates the precise L<Response
-Error
-Code|http://code.google.com/p/selenium/wiki/JsonWireProtocol#Response_Status_Codes>. The
-module will then croak with the error message associated with this
+with a JSON encoded reponse that indicates the precise
+L<Response Error Code|http://code.google.com/p/selenium/wiki/JsonWireProtocol#Response_Status_Codes>.
+The module will then croak with the error message associated with this
 code. If no error occurred, then the subroutine called will return the
 value sent back from the server (if a return value was sent).
 
@@ -235,11 +236,22 @@ Desired capabilities - HASH - Following options are accepted:
 
 =item B<sslProxy>           - <string> - OPTIONAL, ignored if proxyType is not 'manual'. Expected format: hostname.com:1234
 
+=item B<socksProxy>         - <string> - OPTIONAL, ignored if proxyType is not 'manual'. Expected format: hostname.com:1234.  WebDriver 3 only.
+
+=item B<socksVersion>       - <int>    - OPTIONAL, ignored if proxyType is not 'manual'. WebDriver 3 only.
+
+=item B<noProxy>            - <ARRAY>  - OPTIONAL, list of URLs to bypass the proxy for. WebDriver3 only.
+
 =back
 
-=item B<extra_capabilities>   - HASH       - Any other extra capabilities.  Accepted keys will vary by browser.
+=item B<pageLoadStrategy>   - STRING   - OPTIONAL, 'normal|eager|none'. default 'normal'. WebDriver3 only.
+
+=item B<extra_capabilities> - HASH     - Any other extra capabilities.  Accepted keys will vary by browser.
 
 =back
+
+On WebDriver3 the 'extra_capabilities' will be automatically converted into the parameter needed by your browser.
+For example, extra_capabilities is passed to the server as the moz:firefoxOptions parameter.
 
 You can also specify some options in the constructor hash that are
 not part of the browser-related desired capabilities.
@@ -823,6 +835,19 @@ sub _request_new_session {
     my $cmap = $self->commands_v3->get_caps_map();
     my $caps = $self->commands_v3->get_caps();
     foreach my $cap (keys(%{$args->{capabilities}->{alwaysMatch} })) {
+        #Handle browser specific capabilities
+        if (exists($args->{desiredCapabilities}->{browser_name}) && $cap eq 'extra_capabilities') {
+            if (exists $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'}->{args}) {
+                $args->{capabilities}->{alwaysMatch}->{$cap}->{args} = $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'}->{args};
+            }
+            $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'} = $args->{capabilities}->{alwaysMatch}->{$cap} if $args->{desiredCapabilities}->{browser_name} eq 'firefox';
+            $args->{capabilities}->{alwaysMatch}->{'chromeOptions'}      = $args->{capabilities}->{alwaysMatch}->{$cap} if $args->{desiredCapabilities}->{browser_name} eq 'chrome';
+            #Does not appear there are any MSIE based options, so let's just let that be
+        }
+        if ($cap eq 'firefox_profile') {
+            #XXX not sure if I need to keep a ref to the File::Temp::Tempdir object to prevent reaping
+            $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'}->{args} = ['-profile', $args->{capabilities}->{alwaysMatch}->{$cap}->{profile_dir}->dirname()];
+        }
         foreach my $newkey (keys(%$cmap)) {
             if ($newkey eq $cap) {
                 last if $cmap->{$newkey} eq $cap;
@@ -852,6 +877,7 @@ sub _request_new_session {
         $resource_new_session,
         $args,
     );
+
     if ( ( defined $resp->{'sessionId'} ) && $resp->{'sessionId'} ne '' ) {
         $self->session_id( $resp->{'sessionId'} );
     }
@@ -873,6 +899,7 @@ sub _request_new_session {
         $self->{capabilities} = $resp->{cmd_return}->{capabilities};
     }
 
+    return ($args,$resp);
 }
 
 =head2 is_webdriver_3
@@ -3388,7 +3415,7 @@ __END__
 L<https://github.com/SeleniumHQ/selenium> - the main selenium RC project
 L<https://github.com/SeleniumHQ/selenium/wiki/JsonWireProtocol> - the "legacy" webdriver specification
 L<https://www.w3.org/TR/webdriver/> - the WC3 WebDriver 3 specification
-L<https://github.com/gempesaw/Selenium-Remote-Driver/wiki>
+L<https://github.com/teodesian/Selenium-Remote-Driver/wiki>
 Brownie
 Wight
 

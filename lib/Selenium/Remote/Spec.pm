@@ -145,6 +145,8 @@ has '_caps' => (
             'setWindowRect',
             'timeouts',
             'unhandledPromptBehavior',
+            'moz:firefoxOptions',
+            'chromeOptions',
         ];
     }
 );

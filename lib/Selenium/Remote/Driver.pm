@@ -246,7 +246,7 @@ Desired capabilities - HASH - Following options are accepted:
 
 =item B<pageLoadStrategy>   - STRING   - OPTIONAL, 'normal|eager|none'. default 'normal'. WebDriver3 only.
 
-=item B<extra_capabilities> - HASH     - Any other extra capabilities.  Accepted keys will vary by browser.
+=item B<extra_capabilities> - HASH     - Any other extra capabilities.  Accepted keys will vary by browser.  If firefox_profile is passed, the args (or profile) key will be overwritten, depending on how it was passed.
 
 =back
 
@@ -846,7 +846,7 @@ sub _request_new_session {
             #Does not appear there are any MSIE based options, so let's just let that be
         }
         if (exists($args->{desiredCapabilities}->{browserName}) && $args->{desiredCapabilities}->{browserName} eq 'firefox' && $cap eq 'firefox_profile') {
-            if (ref $args->{capabilities}->{alwaysMatch}->{$cap} eq 'HASH') {
+            if (ref $args->{capabilities}->{alwaysMatch}->{$cap} eq 'Selenium::Firefox::Profile') {
                 #XXX not sure if I need to keep a ref to the File::Temp::Tempdir object to prevent reaping
                 $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'}->{args} = ['-profile', $args->{capabilities}->{alwaysMatch}->{$cap}->{profile_dir}->dirname()];
             } else {

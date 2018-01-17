@@ -41,7 +41,7 @@ NEWSESS: {
             },
             extra_capabilities => { #TODO these need to be translated as moz:firefoxOptions => {} automatically, and then to be put in the main hash
                 binary  => '/usr/bin/firefox',
-                args    => ['-profile', '~/.mozilla/firefox/vbdgri9o.default'],
+                args    => ['-profile', '~/.mozilla/firefox/vbdgri9o.default'], #gotta check this gets overridden
                 profile => 'some Base64 string of a zip file. I should really make this a feature',
                 log     => 'trace', #trace|debug|config|info|warn|error|fatal
                 prefs   => {}, #TODO check that this is auto-set above by the Selenium::Firefox::Profile stuff

@@ -511,7 +511,6 @@ sub parse_response {
                 $msg .= ": $resp->{cmd_return}";
             }
         }
-        print "MESSAGE!!!! $msg\n";
         croak $msg;
     }
     return $resp;

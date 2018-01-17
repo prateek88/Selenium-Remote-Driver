@@ -761,6 +761,7 @@ sub _execute_command {
         $params = {} unless $params;
         my $resp = $self->remote_conn->request( $resource, $params);
 
+        #In general, the parse_response for v3 is better, which is why we use it *even if* we are falling back.
         return $self->commands_v3->parse_response($res,$resp) if $self->{is_wd3};
         return $self->commands->parse_response($res,$resp);
     }

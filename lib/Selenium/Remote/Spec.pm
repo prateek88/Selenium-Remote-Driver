@@ -194,8 +194,8 @@ sub get_params {
     $data->{payload} = {};
     if ($args->{type} ) {
         $data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'page load';
-        $data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'script';
-        $data->{payload}->{pageLoad} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'implicit';
+        $data->{payload}->{script}   = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'script';
+        $data->{payload}->{implicit} = $args->{ms} if $data->{url} =~ m/timeouts$/ && $args->{type} eq 'implicit';
     }
 
     #finder polyfills
@@ -203,14 +203,14 @@ sub get_params {
     #new:  "css selector", "link text", "partial link text", "tag name", "xpath"
     #map: class, class_name, id, name, link = 'css selector'
     if ($args->{using} && $args->{value}) {
-        $data->{payload}->{using} = 'css selector' if grep {$args->{using} eq $_ } ('id', 'class name', 'name');
+        $data->{payload}->{using} = 'css selector'            if grep {$args->{using} eq $_ } ('id', 'class name', 'name');
         $data->{payload}->{value} = "#$args->{value}"         if $args->{using} eq 'id';
         $data->{payload}->{value} = ".$args->{value}"         if $args->{using} eq 'class name';
-        $data->{payload}->{value} = "[name='$args->{value}']"  if $args->{using} eq 'name';
+        $data->{payload}->{value} = "[name='$args->{value}']" if $args->{using} eq 'name';
     }
-    $data->{payload}->{script}   = $args->{ms} if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
-    $data->{payload}->{implicit} = $args->{ms} if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;
-    $data->{payload}->{value}    = $args->{text} if $args->{text};
+    $data->{payload}->{script}   = $args->{ms}            if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
+    $data->{payload}->{implicit} = $args->{ms}            if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;
+    $data->{payload}->{value}    = $args->{text}          if $args->{text};
     $data->{payload}->{handle}   = $args->{window_handle} if grep { $args->{command} eq $_ } qw{setWindowSize getWindowSize setWindowPosition getWindowPosition fullscreenWindow minimizeWindow maximizeWindow};
     return $data;
 }

@@ -65,7 +65,7 @@ GET     session/:sessionId/element/:id/property/:name        0 getElementPropert
 GET     session/:sessionId/element/:id/css/:propertyName     0 getElementValueOfCssProperty Get Element CSS Value
 GET     session/:sessionId/element/:id/text                  0 getElementText               Get Element Text
 GET     session/:sessionId/element/:id/name                  0 getElementTagName            Get Element Tag Name
-GET     session/:sessionId/element/:id/rect                  0 getElementSize               Get Element Rect
+GET     session/:sessionId/element/:id/rect                  0 getElementRect               Get Element Rect
 GET     session/:sessionId/element/:id/enabled               0 isElementEnabled             Is Element Enabled
 POST    session/:sessionId/element/:id/click                 1 clickElement                 Element Click
 POST    session/:sessionId/element/:id/clear                 1 clearElement                 Element Clear
@@ -210,7 +210,7 @@ sub get_params {
     }
     $data->{payload}->{script}   = $args->{ms}            if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
     $data->{payload}->{implicit} = $args->{ms}            if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;
-    $data->{payload}->{value}    = $args->{text}          if $args->{text};
+    $data->{payload}->{value}    = $args->{text}          if $args->{text} && $args->{command} ne 'sendKeysToElement';
     $data->{payload}->{handle}   = $args->{window_handle} if grep { $args->{command} eq $_ } qw{setWindowSize getWindowSize setWindowPosition getWindowPosition fullscreenWindow minimizeWindow maximizeWindow};
     return $data;
 }

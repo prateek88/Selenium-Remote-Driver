@@ -900,6 +900,14 @@ sub _request_new_session {
         $self->{capabilities} = $resp->{cmd_return}->{capabilities};
     }
 
+    #XXX chromedriver DOES NOT FOLLOW SPEC!
+    if ( ref $resp->{cmd_return} eq 'HASH' && $resp->{cmd_return}->{chrome}) {
+        if (defined $resp->{cmd_return}->{setWindowRect}) { #XXX i'm inferring we are wd3 based on the presence of this
+            $self->{is_wd3} = 1;
+            $self->{capabilities} = $resp->{cmd_return};
+        }
+    }
+
     return ($args,$resp);
 }
 
@@ -1046,7 +1054,7 @@ sub get_alert_text {
 sub send_keys_to_active_element {
     my ( $self, @strings ) = @_;
 
-    if ($self->{is_wd3}) {
+    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
         @strings = map { split('',$_) } @strings;
         my @acts = map {
             (
@@ -1264,7 +1272,7 @@ sub mouse_move_to_location {
     my ( $self, %params ) = @_;
     $params{element} = $params{element}{id} if exists $params{element};
 
-    if ($self->{is_wd3}) {
+    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
         my $origin = $params{element};
         my $move_action = {
             type => "pointerMove",
@@ -2935,7 +2943,7 @@ sub send_modifier {
         $isdown = $isdown =~ /down/ ? 1 : 0;
     }
 
-    if ($self->{is_wd3}) {
+    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
         my $acts = [
             {
                 type => $isdown ? 'keyDown' : 'keyUp',
@@ -3013,7 +3021,7 @@ sub click {
     my $res    = { 'command' => 'click' };
     my $params = { 'button'  => $button };
 
-    if ($self->{is_wd3}) {
+    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
         $params = {
             actions => [{
                 type => "pointer",
@@ -3073,7 +3081,7 @@ sub double_click {
 
     $button = _get_button($button);
 
-    if ($self->{is_wd3}) {
+    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
         $self->click($button,1);
         $self->click($button,1);
         $self->general_action();
@@ -3103,7 +3111,7 @@ sub double_click {
 sub button_down {
     my ($self) = @_;
 
-    if ($self->{is_wd3}) {
+    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
         my $params = {
             actions => [{
                 type => "pointer",
@@ -3146,7 +3154,7 @@ sub button_down {
 sub button_up {
     my ($self) = @_;
 
-    if ($self->{is_wd3}) {
+    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
         my $params = {
             actions => [{
                 type => "pointer",

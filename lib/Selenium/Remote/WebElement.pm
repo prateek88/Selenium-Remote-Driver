@@ -140,7 +140,7 @@ sub click {
 
 sub submit {
     my ($self) = @_;
-    return $self->driver->execute_script("return arguments[0].submit();", {'element-6066-11e4-a52e-4f735466cecf'=> $self->{id}} ) if $self->driver->{is_wd3};
+    return $self->driver->execute_script("return arguments[0].submit();", {'element-6066-11e4-a52e-4f735466cecf'=> $self->{id}} ) if $self->driver->{is_wd3} && $self->driver->browser_name ne 'chrome';
     my $res = { 'command' => 'submitElement', 'id' => $self->id };
     return $self->_execute_command($res);
 }
@@ -205,7 +205,7 @@ sub send_keys {
 sub is_selected {
     my ($self) = @_;
 
-    return $self->get_property('checked') if $self->driver->{is_wd3};
+    return $self->get_property('checked') if $self->driver->{is_wd3} && $self->driver->browser_name ne 'chrome';
     my $res = { 'command' => 'isElementSelected', 'id' => $self->id };
     return $self->_execute_command($res);
 }
@@ -223,7 +223,7 @@ sub is_selected {
 
 sub set_selected {
     my ($self) = @_;
-    if ($self->driver->{is_wd3} ) {
+    if ($self->driver->{is_wd3}) {
         return if $self->is_selected();
         return $self->click();
     }
@@ -270,7 +270,7 @@ sub toggle {
 
 sub is_enabled {
     my ($self) = @_;
-    return $self->get_property('enabled') ? 1 : 0 if $self->driver->{is_wd3};
+    return $self->get_property('enabled') ? 1 : 0 if $self->driver->{is_wd3} && $self->driver->browser_name ne 'chrome';
     my $res = { 'command' => 'isElementEnabled', 'id' => $self->id };
     return $self->_execute_command($res);
 }
@@ -296,7 +296,7 @@ sub is_enabled {
 
 sub get_element_location {
     my ($self) = @_;
-    if ($self->driver->{is_wd3}) {
+    if ($self->driver->{is_wd3} && $self->driver->browser_name ne 'chrome') {
         my $data = $self->get_element_rect();
         delete $data->{height};
         delete $data->{width};
@@ -327,7 +327,7 @@ sub get_element_location {
 
 sub get_size {
     my ($self) = @_;
-    if ($self->driver->{is_wd3}) {
+    if ($self->driver->{is_wd3} && $self->driver->browser_name ne 'chrome') {
         my $data = $self->get_element_rect();
         delete $data->{x};
         delete $data->{y};
@@ -350,7 +350,7 @@ Example Output:
 
 sub get_element_rect {
     my ($self) = @_;
-    my $res = { 'command' => 'getElementSize', 'id' => $self->id };
+    my $res = { 'command' => 'getElementRect', 'id' => $self->id };
     return $self->_execute_command($res);
 }
 
@@ -445,7 +445,7 @@ sub get_attribute {
     if ( not defined $attr_name ) {
         croak 'Attribute name not provided';
     }
-    return $self->get_property($attr_name) if $self->driver->{is_wd3} && !$no_i_really_mean_it;
+    return $self->get_property($attr_name) if $self->driver->{is_wd3} && $self->driver->browser_name ne 'chrome' && !$no_i_really_mean_it;
 
     my $res = {
         'command' => 'getElementAttribute',
@@ -467,6 +467,7 @@ Only available on WebDriver 3 enabled servers.
 
 sub get_property {
     my ($self,$prop) = @_;
+    return $self->get_attribute($prop) if $self->driver->{is_wd3} && $self->driver->browser_name eq 'chrome';
     my $res = { 'command' => 'getElementProperty', id => $self->id, name => $prop };
     return $self->_execute_command($res);
 }
@@ -508,7 +509,7 @@ sub get_value {
 
 sub is_displayed {
     my ($self) = @_;
-    if ($self->driver->{is_wd3}) {
+    if ($self->driver->{is_wd3} && $self->driver->browser_name ne 'chrome') {
         return 0 if $self->get_tag_name() eq 'input' && $self->get_property('type') eq 'hidden'; #hidden type inputs
         return int($self->get_css_attribute('display') ne 'none');
     }

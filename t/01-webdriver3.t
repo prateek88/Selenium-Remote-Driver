@@ -19,14 +19,13 @@ NEWSESS: {
     );
     my $args = {
         desiredCapabilities => {
-            browser_name       => 'firefox',
-            remote_server_addr => 'localhost',
-            port               => 4444,
+            browserName       => 'firefox',
             version            => 666,
             platform           => 'ANY',
             javascript         => 1,
-            accept_ssl_certs   => 1,
+            acceptSslCerts     => 1,
             firefox_profile    => $profile,
+            pageLoadStrategy   => 'none',
             proxy => {
                 proxyType => 'direct',
                 proxyAutoconfigUrl => 'http://localhost',
@@ -50,7 +49,7 @@ NEWSESS: {
 
     no warnings qw{redefine once};
     local *Selenium::Remote::RemoteConnection::request = sub {return { sessionId => 'zippy', cmd_status => 'OK' }};
-    local *File::Temp::newdir = sub { return bless { DIRNAME => '/tmp/zippy' }, 'File::Temp::Dir' };
+    local *File::Temp::Dir::dirname = sub { return '/tmp/zippy' };
     use warnings;
 
     my ($args_modified,undef) = $self->_request_new_session($args);
@@ -81,11 +80,24 @@ NEWSESS: {
                 'socksProxy'         => 'localhost:1234',
                 'socksVersion'       => 2,
                 'sslProxy'           => 'localhost:1234'
-            }
+            },
+            'browserName'      => 'firefox',
+            'pageLoadStrategy' => 'none',
+            acceptInsecureCerts => 1,
         }
     };
 
-    is_deeply($args_modified->{capabilities},$expected,"Desired capabilities correctly translated (WD3)");
+    is_deeply($args_modified->{capabilities},$expected,"Desired capabilities correctly translated to Firefox (WD3)");
+
+    $expected->{alwaysMatch}->{'chromeOptions'} = $expected->{alwaysMatch}->{'moz:firefoxOptions'};
+    $expected->{alwaysMatch}->{'moz:firefoxOptions'} = {};
+    $expected->{alwaysMatch}->{chromeOptions}->{args} = ['-profile', '~/.mozilla/firefox/vbdgri9o.default'];
+    $expected->{alwaysMatch}->{browserName} = 'chrome';
+
+    $args->{desiredCapabilities}->{browserName} = 'chrome';
+    ($args_modified,undef) = $self->_request_new_session($args);
+    is_deeply($args_modified->{capabilities},$expected,"Desired capabilities correctly translated to Krom (WD3)");
+
 }
 
 done_testing();

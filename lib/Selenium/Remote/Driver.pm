@@ -830,21 +830,21 @@ sub new_desired_session {
 sub _request_new_session {
     my ( $self, $args ) = @_;
 
-    #XXX UGLY shim for webdriver3, since nobody looks at specs when implementing stuff
+    #XXX UGLY shim for webdriver3
     $args->{capabilities}->{alwaysMatch} = clone($args->{desiredCapabilities});
     my $cmap = $self->commands_v3->get_caps_map();
     my $caps = $self->commands_v3->get_caps();
     foreach my $cap (keys(%{$args->{capabilities}->{alwaysMatch} })) {
         #Handle browser specific capabilities
-        if (exists($args->{desiredCapabilities}->{browser_name}) && $cap eq 'extra_capabilities') {
+        if (exists($args->{desiredCapabilities}->{browserName}) && $cap eq 'extra_capabilities') {
             if (exists $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'}->{args}) {
                 $args->{capabilities}->{alwaysMatch}->{$cap}->{args} = $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'}->{args};
             }
-            $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'} = $args->{capabilities}->{alwaysMatch}->{$cap} if $args->{desiredCapabilities}->{browser_name} eq 'firefox';
-            $args->{capabilities}->{alwaysMatch}->{'chromeOptions'}      = $args->{capabilities}->{alwaysMatch}->{$cap} if $args->{desiredCapabilities}->{browser_name} eq 'chrome';
+            $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'} = $args->{capabilities}->{alwaysMatch}->{$cap} if $args->{desiredCapabilities}->{browserName} eq 'firefox';
+            $args->{capabilities}->{alwaysMatch}->{'chromeOptions'}      = $args->{capabilities}->{alwaysMatch}->{$cap} if $args->{desiredCapabilities}->{browserName} eq 'chrome';
             #Does not appear there are any MSIE based options, so let's just let that be
         }
-        if ($cap eq 'firefox_profile') {
+        if (exists($args->{desiredCapabilities}->{browserName}) && $args->{desiredCapabilities}->{browserName} eq 'firefox' && $cap eq 'firefox_profile') {
             #XXX not sure if I need to keep a ref to the File::Temp::Tempdir object to prevent reaping
             $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'}->{args} = ['-profile', $args->{capabilities}->{alwaysMatch}->{$cap}->{profile_dir}->dirname()];
         }

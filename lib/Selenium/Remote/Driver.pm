@@ -206,7 +206,7 @@ Desired capabilities - HASH - Following options are accepted:
 
 =item B<accept_ssl_certs>   - <boolean>  - whether SSL certs should be accepted, default is true.
 
-=item B<firefox_profile>    - Profile    - Use Selenium::Firefox::Profile to create a Firefox profile for the browser to use
+=item B<firefox_profile>    - Profile    - Use Selenium::Firefox::Profile to create a Firefox profile for the browser to use.  Optionally can pass a base64'd zip data of a profile directory if you don't like Selenium::Firefox::Profile.
 
 =item B<proxy>              - HASH       - Proxy configuration with the following keys:
 
@@ -846,8 +846,13 @@ sub _request_new_session {
             #Does not appear there are any MSIE based options, so let's just let that be
         }
         if (exists($args->{desiredCapabilities}->{browserName}) && $args->{desiredCapabilities}->{browserName} eq 'firefox' && $cap eq 'firefox_profile') {
-            #XXX not sure if I need to keep a ref to the File::Temp::Tempdir object to prevent reaping
-            $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'}->{args} = ['-profile', $args->{capabilities}->{alwaysMatch}->{$cap}->{profile_dir}->dirname()];
+            if (ref $args->{capabilities}->{alwaysMatch}->{$cap} eq 'HASH') {
+                #XXX not sure if I need to keep a ref to the File::Temp::Tempdir object to prevent reaping
+                $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'}->{args} = ['-profile', $args->{capabilities}->{alwaysMatch}->{$cap}->{profile_dir}->dirname()];
+            } else {
+                #previously undocumented feature that we can pass the encoded profile
+                $args->{capabilities}->{alwaysMatch}->{'moz:firefoxOptions'}->{profile} = $args->{capabilities}->{alwaysMatch}->{$cap};
+            }
         }
         foreach my $newkey (keys(%$cmap)) {
             if ($newkey eq $cap) {

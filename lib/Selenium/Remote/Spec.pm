@@ -208,8 +208,14 @@ sub get_params {
         $data->{payload}->{value} = ".$args->{value}"         if $args->{using} eq 'class name';
         $data->{payload}->{value} = "[name='$args->{value}']" if $args->{using} eq 'name';
     }
-    $data->{payload}->{script}   = $args->{ms}            if $data->{url} =~ s/timeouts\/async_script$/timeouts/g;
-    $data->{payload}->{implicit} = $args->{ms}            if $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g;
+    if ($data->{url} =~ s/timeouts\/async_script$/timeouts/g) {
+        $data->{payload}->{script} = $args->{ms};
+        $data->{payload}->{type}   = 'script'; #XXX chrome doesn't follow the spec
+    }
+    if ( $data->{url} =~ s/timeouts\/implicit_wait$/timeouts/g) {
+        $data->{payload}->{implicit} = $args->{ms};
+        $data->{payload}->{type}     = 'implicit'; #XXX chrome doesn't follow the spec
+    }
     $data->{payload}->{value}    = $args->{text}          if $args->{text} && $args->{command} ne 'sendKeysToElement';
     $data->{payload}->{handle}   = $args->{window_handle} if grep { $args->{command} eq $_ } qw{setWindowSize getWindowSize setWindowPosition getWindowPosition fullscreenWindow minimizeWindow maximizeWindow};
     return $data;

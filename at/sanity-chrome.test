@@ -43,11 +43,8 @@ is($timeouts->{implicit},10000,"WD3 set/get timeouts works");
 $driver->set_async_script_timeout(20000);
 $driver->set_implicit_wait_timeout(5000);
 $timeouts = $driver->get_timeouts();
-TODO: {
-    local $TODO = 'Bug on chrome';
-    is($timeouts->{script},20000,"WD3 shim for set_async timeouts works");
-    is($timeouts->{implicit},5000,"WD3 shim for implicit timeouts works");
-}
+is($timeouts->{script},20000,"WD3 shim for set_async timeouts works");
+is($timeouts->{implicit},5000,"WD3 shim for implicit timeouts works");
 
 my $loc = abs_path("$FindBin::Bin/test.html");
 ok($driver->get("file://$loc"),"Can load a web page (WD3)");
@@ -124,8 +121,8 @@ is( $driver->get_geolocation()->{latitude},$coords->{latitude},"cang get_geoloca
 ok($driver->get_log('server'), "get_log fallback works");
 ok( scalar(@{$driver->get_log_types()}),"can fallback for get_log_types");
 
-ok($driver->set_orientation("LANDSCAPE"),"set_orientation works on krom");
-like($driver->get_orientation()->{message},qr/error/,"get_orientation unavailable on desktop");
+isnt(exception { $driver->set_orientation("LANDSCAPE") },undef,"set_orientation unavailable on desktop");
+like(exception { $driver->get_orientation() },qr/error/,"get_orientation unavailable on desktop");
 
 like($driver->upload_file($otherloc),qr/other.html$/,"upload_file fallback works");
 

@@ -2065,7 +2065,7 @@ sub switch_to_frame {
 
     my $res = { 'command' => 'switchToFrame' };
     if ( ref $id eq $self->webelement_class ) {
-        if ($self->{is_wd3}) {
+        if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
             $params = { 'id' => { 'element-6066-11e4-a52e-4f735466cecf' => $id->{'id'} } };
         } else {
             $params = { 'id' => { 'ELEMENT' => $id->{'id'} } };

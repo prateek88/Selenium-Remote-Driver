@@ -145,6 +145,7 @@ is(scalar(@{$driver->get_all_cookies()}),0,"can delete all cookies (WD3)");
 
 ok($driver->mouse_move_to_location( element => $driver->find_element('a','tag_name')),"Can use new WD3 Actions API to emulate mouse_move_to_location");
 $driver->click();
+sleep 5;
 my $handles = $driver->get_window_handles();
 is(scalar(@$handles),2,"Can move to element and then click it correctly (WD3)");
 

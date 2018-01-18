@@ -1226,6 +1226,9 @@ Only available on WebDriver3 capable selenium servers.
 If you have called any legacy shim, such as mouse_move_to_location() previously, your actions passed will be appended to the existing actions queue.
 Called with no arguments, it simply executes the existing action queue.
 
+If you are looking for pre-baked action chains that aren't currently part of L<Selenium::Remote::Driver>,
+consider L<Selenium::ActionChains>, which is shipped with this distribution instead.
+
 =cut
 
 sub general_action {

@@ -201,7 +201,7 @@ SPEC_PARAMS: {
             'handle'   => 'panama',
             'pageLoad' => 666,
             'using'    => 'css selector',
-            'value'    => 'zippy'
+            'value'    => 'zippy',
         },
     };
     is_deeply($obj->get_params($args),$expected,"get_params: var substitution works, payload construction works (mostly)");
@@ -223,6 +223,7 @@ SPEC_PARAMS: {
     $args->{type} = 'page load';
     delete $expected->{payload}{pageLoad};
     $expected->{payload}{script} = 666;
+    $expected->{payload}{type} = 'script';
     is_deeply($obj->get_params($args),$expected,"get_params: async_script substitution works");
 
     no warnings qw{redefine once};
@@ -231,6 +232,7 @@ SPEC_PARAMS: {
 
     delete $expected->{payload}{script};
     $expected->{payload}{implicit} = 666;
+    $expected->{payload}{type} = 'implicit';
     is_deeply($obj->get_params($args),$expected,"get_params: implicit_wait substitution works");
 
     delete $args->{text};

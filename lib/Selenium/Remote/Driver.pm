@@ -182,6 +182,31 @@ Your other option is to use this module in conjunction with your
 choice of testing modules, like L<Test::Spec> or L<Test::More> as
 you please.
 
+=head1 WC3 WEBDRIVER COMPATIBILITY
+
+WC3 Webdriver is a constantly evolving standard, so some things may or may not work at any given time.
+That said, the following 'sanity tests' in the at/ (acceptance test) directory of the module passed on the following versions:
+
+=over 4
+
+=item Selenium Server: 3.8.1 - all tests
+
+=item geckodriver: 0.19.1 - at/sanity.test
+
+=item chromedriver: 2.35 - at/sanity-chrome.test
+
+=item edgedriver: 5.16299 - at/sanity-edge.test
+
+=back
+
+These tests are intended to be run directly against a working selenium server on the local host with said drivers configured.
+
+If you are curious as to what 'works and does not' on your driver versions (and a few other quirks),
+it is strongly encouraged you look at where the test calls the methods you are interested in.
+
+While other browsers/drivers (especially legacy ones) likely work fine as well,
+any new browser/driver will likely have problems if it's not listed above.
+
 =head1 CONSTRUCTOR
 
 =head2 new
@@ -198,7 +223,7 @@ Desired capabilities - HASH - Following options are accepted:
 
 =item B<port>               - <string>   - Port on which the Webdriver server is listening. Default: 4444
 
-=item B<browser_name>       - <string>   - desired browser string: {phantomjs|firefox|internet explorer|htmlunit|iphone|chrome}
+=item B<browser_name>       - <string>   - desired browser string: {phantomjs|firefox|internet explorer|MicrosoftEdge|htmlunit|iphone|chrome}
 
 =item B<version>            - <string>   - desired browser version number
 
@@ -749,7 +774,6 @@ sub _execute_command {
     $res->{value} = $params->{value} if $params->{value};
 
     print "Executing $res->{command}\n" if $self->{debug};
-
     my $resource = $self->{is_wd3} ? $self->commands_v3->get_params($res) : $self->commands->get_params($res);
     #Fall-back to legacy if wd3 command doesn't exist
     if (!$resource && $self->{is_wd3}) {
@@ -913,6 +937,12 @@ sub _request_new_session {
         }
     }
 
+    #XXX unsurprisingly, neither does microsoft
+    if ( ref $resp->{cmd_return} eq 'HASH' && $resp->{cmd_return}->{pageLoadStrategy} && $self->browser_name eq 'MicrosoftEdge') {
+        $self->{is_wd3} = 1;
+        $self->{capabilities} = $resp->{cmd_return};
+    }
+
     return ($args,$resp);
 }
 
@@ -1059,7 +1089,7 @@ sub get_alert_text {
 sub send_keys_to_active_element {
     my ( $self, @strings ) = @_;
 
-    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
+    if ($self->{is_wd3} && !(grep { $self->browser_name eq $_ } qw{chrome MicrosoftEdge}) ) {
         @strings = map { split('',$_) } @strings;
         my @acts = map {
             (
@@ -1277,7 +1307,7 @@ sub mouse_move_to_location {
     my ( $self, %params ) = @_;
     $params{element} = $params{element}{id} if exists $params{element};
 
-    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
+    if ($self->{is_wd3} && !(grep { $self->browser_name eq $_ } qw{chrome MicrosoftEdge}) ) {
         my $origin = $params{element};
         my $move_action = {
             type => "pointerMove",
@@ -1996,7 +2026,7 @@ sub capture_screenshot {
 =cut
 
 #TODO emulate behavior on wd3?
-#grep { eval { Selenium::Remote::Driver->new( browser => $_ ) } } (qw{firefox chrome opera safari htmlunit iphone phantomjs},'internet_explorer');
+#grep { eval { Selenium::Remote::Driver->new( browser => $_ ) } } (qw{firefox MicrosoftEdge chrome opera safari htmlunit iphone phantomjs},'internet_explorer');
 #might do the trick
 sub available_engines {
     my ($self) = @_;
@@ -2948,7 +2978,7 @@ sub send_modifier {
         $isdown = $isdown =~ /down/ ? 1 : 0;
     }
 
-    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
+    if ($self->{is_wd3} &&  !(grep { $self->browser_name eq $_ } qw{chrome MicrosoftEdge}))  {
         my $acts = [
             {
                 type => $isdown ? 'keyDown' : 'keyUp',
@@ -3026,7 +3056,7 @@ sub click {
     my $res    = { 'command' => 'click' };
     my $params = { 'button'  => $button };
 
-    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
+    if ($self->{is_wd3} &&  !(grep { $self->browser_name eq $_ } qw{chrome MicrosoftEdge})) {
         $params = {
             actions => [{
                 type => "pointer",
@@ -3086,7 +3116,7 @@ sub double_click {
 
     $button = _get_button($button);
 
-    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
+    if ($self->{is_wd3} && !(grep { $self->browser_name eq $_ } qw{chrome MicrosoftEdge})) {
         $self->click($button,1);
         $self->click($button,1);
         $self->general_action();
@@ -3116,7 +3146,7 @@ sub double_click {
 sub button_down {
     my ($self) = @_;
 
-    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
+    if ($self->{is_wd3} &&  !(grep { $self->browser_name eq $_ } qw{chrome MicrosoftEdge})) {
         my $params = {
             actions => [{
                 type => "pointer",
@@ -3159,7 +3189,7 @@ sub button_down {
 sub button_up {
     my ($self) = @_;
 
-    if ($self->{is_wd3} && $self->browser_name ne 'chrome') {
+    if ($self->{is_wd3} && !(grep { $self->browser_name eq $_ } qw{chrome MicrosoftEdge})) {
         my $params = {
             actions => [{
                 type => "pointer",

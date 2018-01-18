@@ -217,6 +217,7 @@ sub get_params {
 
 sub parse_response {
     my ($self,undef,$resp) = @_;
+
     if ( ref($resp) eq 'HASH' ) {
         if ( $resp->{cmd_status} && $resp->{cmd_status} eq 'OK' ) {
             return $resp->{cmd_return};

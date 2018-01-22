@@ -1852,6 +1852,7 @@ sub execute_async_script {
             {
                 if ($self->{is_wd3}) {
                     $args[$i] = { 'element-6066-11e4-a52e-4f735466cecf' => ( $args[$i] )->{id} };
+                    $args[$i]->{ELEMENT} = $args[$i]->{id} if $self->browser_name eq 'chrome'; #XXX sometimes they prefer the latter/prior
                 } else {
                     $args[$i] = { 'ELEMENT' => ( $args[$i] )->{id} };
                 }
@@ -1922,6 +1923,7 @@ sub execute_script {
             {
                 if ($self->{is_wd3}) {
                     $args[$i] = { 'element-6066-11e4-a52e-4f735466cecf' => ( $args[$i] )->{id} };
+                    $args[$i]->{ELEMENT} = $args[$i]->{id} if $self->browser_name eq 'chrome'; #XXX sometimes they prefer the latter/prior
                 } else {
                     $args[$i] = { 'ELEMENT' => ( $args[$i] )->{id} };
                 }

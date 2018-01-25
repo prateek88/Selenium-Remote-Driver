@@ -830,12 +830,13 @@ sub new_session {
     $extra_capabilities ||= {};
     my $args = {
         'desiredCapabilities' => {
-            'browserName'       => $self->browser_name,
-            'platform'          => $self->platform,
-            'javascriptEnabled' => $self->javascript,
-            'version'           => $self->version,
-            'acceptSslCerts'    => $self->accept_ssl_certs,
+            'browserName'        => $self->browser_name,
+            'platform'           => $self->platform,
+            'javascriptEnabled'  => $self->javascript,
+            'version'            => $self->version,
+            'acceptSslCerts'     => $self->accept_ssl_certs,
             %$extra_capabilities,
+            'extra_capabilities' => \%$extra_capabilities,
         },
     };
 

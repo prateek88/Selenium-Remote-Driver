@@ -1649,6 +1649,7 @@ sub get_window_size {
     my ( $self, $window ) = @_;
     $window = ( defined $window ) ? $window : 'current';
     my $res = { 'command' => 'getWindowSize', 'window_handle' => $window };
+    $res = {'command' => 'getWindowRect', handle => $window } if $self->{is_wd3} && $self->browser_name ne 'chrome';
     return $self->_execute_command($res);
 }
 
@@ -1677,6 +1678,7 @@ sub get_window_position {
     my ( $self, $window ) = @_;
     $window = ( defined $window ) ? $window : 'current';
     my $res = { 'command' => 'getWindowPosition', 'window_handle' => $window };
+    $res = {'command' => 'getWindowRect', handle => $window } if $self->{is_wd3} && $self->browser_name ne 'chrome';
     return $self->_execute_command($res);
 }
 
@@ -2207,6 +2209,9 @@ sub set_window_position {
     }
     my $res = { 'command' => 'setWindowPosition', 'window_handle' => $window };
     my $params = { 'x' => $x, 'y' => $y };
+    if ( $self->{is_wd3} && $self->browser_name ne 'chrome') {
+        $res = {'command' => 'setWindowRect', handle => $window };
+    }
     my $ret = $self->_execute_command( $res, $params );
     return $ret ? 1 : 0;
 }
@@ -2243,6 +2248,9 @@ sub set_window_size {
     $width += 0;
     my $res = { 'command' => 'setWindowSize', 'window_handle' => $window };
     my $params = { 'height' => $height, 'width' => $width };
+    if ( $self->{is_wd3} && $self->browser_name ne 'chrome') {
+        $res = {'command' => 'setWindowRect', handle => $window };
+    }
     my $ret = $self->_execute_command( $res, $params );
     return $ret ? 1 : 0;
 }

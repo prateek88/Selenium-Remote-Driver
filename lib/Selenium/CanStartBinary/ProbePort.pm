@@ -9,7 +9,7 @@ use IO::Socket::INET;
 use Selenium::Waiter qw/wait_until/;
 
 require Exporter;
-our @ISA = qw/Exporter/;
+our @ISA       = qw/Exporter/;
 our @EXPORT_OK = qw/find_open_port_above find_open_port probe_port/;
 
 =for Pod::Coverage *EVERYTHING*
@@ -17,19 +17,11 @@ our @EXPORT_OK = qw/find_open_port_above find_open_port probe_port/;
 =cut
 
 sub find_open_port_above {
-    my ($port) = @_;
-
-    my $free_port = wait_until {
-        if ( probe_port($port) ) {
-            $port++;
-            return 0;
-        }
-        else {
-            return $port;
-        }
-    };
-
-    return $free_port;
+    socket(SOCK, PF_INET, SOCK_STREAM, getprotobyname("tcp"));
+    bind(SOCK, sockaddr_in(0, INADDR_ANY));
+    my $port = (sockaddr_in(getsockname(SOCK)))[0];
+    close(SOCK);
+    return $port;
 }
 
 sub find_open_port {
@@ -44,6 +36,6 @@ sub probe_port {
     return IO::Socket::INET->new(
         PeerAddr => '127.0.0.1',
         PeerPort => $port,
-        Timeout => 3
+        Timeout  => 3
     );
 }
